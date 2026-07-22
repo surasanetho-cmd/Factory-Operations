@@ -13,6 +13,24 @@ Format inspired by Keep a Changelog; SemVer when software releases begin.
 
 ---
 
+## [0.2.0] — 2026-07-22
+
+### Added
+
+- Complete PostgreSQL database design documentation:
+  - Expanded [04_DATABASE_STANDARD.md](04_DATABASE_STANDARD.md) naming convention
+  - Complete [05_DATABASE_DICTIONARY.md](05_DATABASE_DICTIONARY.md) column-level dictionary
+  - Complete [06_ER_DIAGRAM.md](06_ER_DIAGRAM.md)
+  - [37_TABLE_RELATIONSHIPS.md](37_TABLE_RELATIONSHIPS.md)
+  - [38_FOREIGN_KEYS.md](38_FOREIGN_KEYS.md)
+  - [39_INDEX_STRATEGY.md](39_INDEX_STRATEGY.md)
+
+### Notes
+
+- Design-only; no SQL migrations or application code in this release
+
+---
+
 ## [0.1.1] — 2026-07-22
 
 ### Changed

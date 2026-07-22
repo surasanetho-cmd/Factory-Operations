@@ -146,6 +146,18 @@
 
 ---
 
+## ADR-012 — Complete Database Design Pack
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-07-22 |
+| Status | Accepted |
+| Context | Need implementable PostgreSQL design before migrations |
+| Decision | Treat `04`+`05`+`06`+`37`+`38`+`39` as the complete design pack (naming, dictionary, ER, relationships, FKs, indexes) |
+| Consequences | Migrations must follow these docs; no ad-hoc tables |
+
+---
+
 ## Related Documents
 
 - [00_PROJECT_CONSTITUTION.md](00_PROJECT_CONSTITUTION.md)

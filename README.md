@@ -21,9 +21,12 @@ All platform rules live in [`/docs`](docs/):
 
 | Doc | Topic |
 |-----|-------|
-| [04_DATABASE_STANDARD.md](docs/04_DATABASE_STANDARD.md) | Database standard |
-| [05_DATABASE_DICTIONARY.md](docs/05_DATABASE_DICTIONARY.md) | Data dictionary |
+| [04_DATABASE_STANDARD.md](docs/04_DATABASE_STANDARD.md) | Database standard & naming |
+| [05_DATABASE_DICTIONARY.md](docs/05_DATABASE_DICTIONARY.md) | Complete data dictionary |
 | [06_ER_DIAGRAM.md](docs/06_ER_DIAGRAM.md) | ER diagrams |
+| [37_TABLE_RELATIONSHIPS.md](docs/37_TABLE_RELATIONSHIPS.md) | Table relationships |
+| [38_FOREIGN_KEYS.md](docs/38_FOREIGN_KEYS.md) | Foreign keys & CHECKs |
+| [39_INDEX_STRATEGY.md](docs/39_INDEX_STRATEGY.md) | Index strategy |
 | [18_CALENDAR_ENGINE.md](docs/18_CALENDAR_ENGINE.md) | Shared calendar engine |
 | [26_MASTER_DATA.md](docs/26_MASTER_DATA.md) | Master data |
 | [31_NUMBERING_STANDARD.md](docs/31_NUMBERING_STANDARD.md) | Numbering |
