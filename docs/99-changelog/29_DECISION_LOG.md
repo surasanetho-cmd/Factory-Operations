@@ -170,8 +170,21 @@
 
 ---
 
+## ADR-014 — Database Architecture Pack Before SQL
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-07-22 |
+| Status | Accepted |
+| Context | Need reviewable complete DB design before migrations |
+| Decision | Publish docs `40`–`49` (module/entity relationships + domain table lists with per-table strategies) and treat `05` as column dictionary; **wait for review before SQL** |
+| Consequences | No `supabase/migrations` until explicit approval |
+
+---
+
 ## Related Documents
 
 - [00_PROJECT_CONSTITUTION.md](../00-governance/00_PROJECT_CONSTITUTION.md)
 - [30_CHANGELOG.md](30_CHANGELOG.md)
 - [36_DOCUMENTATION_REVIEW.md](36_DOCUMENTATION_REVIEW.md)
+- [40_DATABASE_ARCHITECTURE.md](../30-database/40_DATABASE_ARCHITECTURE.md)

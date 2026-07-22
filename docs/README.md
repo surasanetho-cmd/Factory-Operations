@@ -55,14 +55,24 @@ docs/
 
 | Document | Description |
 |----------|-------------|
+| [40_DATABASE_ARCHITECTURE.md](30-database/40_DATABASE_ARCHITECTURE.md) | **Complete DB architecture (review gate)** |
+| [41_MODULE_RELATIONSHIPS.md](30-database/41_MODULE_RELATIONSHIPS.md) | Module relationships |
+| [42_ENTITY_RELATIONSHIPS.md](30-database/42_ENTITY_RELATIONSHIPS.md) | Entity relationships |
+| [43_MASTER_DATA_LIST.md](30-database/43_MASTER_DATA_LIST.md) | Master data list |
+| [44_TRANSACTION_LIST.md](30-database/44_TRANSACTION_LIST.md) | Transaction list |
+| [45_HISTORY_LIST.md](30-database/45_HISTORY_LIST.md) | History list |
+| [46_CONFIGURATION_LIST.md](30-database/46_CONFIGURATION_LIST.md) | Configuration list |
+| [47_LOG_LIST.md](30-database/47_LOG_LIST.md) | Log list |
+| [48_INTEGRATION_LIST.md](30-database/48_INTEGRATION_LIST.md) | Integration list |
+| [49_DASHBOARD_LIST.md](30-database/49_DASHBOARD_LIST.md) | Dashboard list |
+| [05_DATABASE_DICTIONARY.md](30-database/05_DATABASE_DICTIONARY.md) | Data dictionary (columns) |
 | [04_DATABASE_STANDARD.md](30-database/04_DATABASE_STANDARD.md) | DB standard & naming |
-| [05_DATABASE_DICTIONARY.md](30-database/05_DATABASE_DICTIONARY.md) | Complete data dictionary |
 | [06_ER_DIAGRAM.md](30-database/06_ER_DIAGRAM.md) | ER diagrams |
 | [31_NUMBERING_STANDARD.md](30-database/31_NUMBERING_STANDARD.md) | Document numbering |
 | [32_STATUS_STATE_MACHINE.md](30-database/32_STATUS_STATE_MACHINE.md) | Status machines |
 | [33_PLANT_ORG_STANDARD.md](30-database/33_PLANT_ORG_STANDARD.md) | Plant & organization |
 | [35_UOM_STANDARD.md](30-database/35_UOM_STANDARD.md) | Units of measure |
-| [37_TABLE_RELATIONSHIPS.md](30-database/37_TABLE_RELATIONSHIPS.md) | Relationships |
+| [37_TABLE_RELATIONSHIPS.md](30-database/37_TABLE_RELATIONSHIPS.md) | Relationships matrix |
 | [38_FOREIGN_KEYS.md](30-database/38_FOREIGN_KEYS.md) | Foreign keys & CHECKs |
 | [39_INDEX_STRATEGY.md](30-database/39_INDEX_STRATEGY.md) | Index strategy |
 

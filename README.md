@@ -29,13 +29,14 @@ Full catalog: [docs/README.md](docs/README.md)
 | Constitution | [00_PROJECT_CONSTITUTION.md](docs/00-governance/00_PROJECT_CONSTITUTION.md) |
 | Vision | [01_PROJECT_VISION.md](docs/10-business/01_PROJECT_VISION.md) |
 | Architecture | [02_SYSTEM_ARCHITECTURE.md](docs/20-architecture/02_SYSTEM_ARCHITECTURE.md) |
-| Database design | [05_DATABASE_DICTIONARY.md](docs/30-database/05_DATABASE_DICTIONARY.md) · [06_ER_DIAGRAM.md](docs/30-database/06_ER_DIAGRAM.md) |
+| **DB architecture (review)** | [40_DATABASE_ARCHITECTURE.md](docs/30-database/40_DATABASE_ARCHITECTURE.md) |
+| Data dictionary | [05_DATABASE_DICTIONARY.md](docs/30-database/05_DATABASE_DICTIONARY.md) |
 | Cursor rules | [23_CURSOR_RULES.md](docs/00-governance/23_CURSOR_RULES.md) |
 | Changelog / ADR | [30_CHANGELOG.md](docs/99-changelog/30_CHANGELOG.md) · [29_DECISION_LOG.md](docs/99-changelog/29_DECISION_LOG.md) |
 
 ## Current Phase
 
-**Production Planning** — documentation foundation + complete PostgreSQL design (docs only).
+**Production Planning** — complete database architecture documented. **Awaiting review before SQL.**
 
 ## Next Step
 

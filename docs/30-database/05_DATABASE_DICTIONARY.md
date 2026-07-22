@@ -2,6 +2,11 @@
 
 **Product:** Smart-Factory Manufacturing Platform  
 **Engine:** PostgreSQL  
+**Status:** Design dictionary — **await SQL generation until architecture review is approved**  
+**Architecture pack:** [40_DATABASE_ARCHITECTURE.md](40_DATABASE_ARCHITECTURE.md)  
+**Table strategies (Purpose / PK / FK / Indexes / Soft Delete / Audit):**  
+[43 Master](43_MASTER_DATA_LIST.md) · [44 Txn](44_TRANSACTION_LIST.md) · [45 History](45_HISTORY_LIST.md) · [46 Config](46_CONFIGURATION_LIST.md) · [47 Log](47_LOG_LIST.md) · [48 Integration](48_INTEGRATION_LIST.md) · [49 Dashboard](49_DASHBOARD_LIST.md)
+
 **Patterns:** **A** / **J** / **H** / **L** / **E** — [04_DATABASE_STANDARD.md](04_DATABASE_STANDARD.md)  
 **Null:** columns are NOT NULL unless marked **N** (nullable).  
 **Types:** PostgreSQL types.
@@ -675,6 +680,14 @@ Do not invent alternate names for these concepts.
 
 ## Related Documents
 
+- [40_DATABASE_ARCHITECTURE.md](40_DATABASE_ARCHITECTURE.md)
+- [43_MASTER_DATA_LIST.md](43_MASTER_DATA_LIST.md)
+- [44_TRANSACTION_LIST.md](44_TRANSACTION_LIST.md)
+- [45_HISTORY_LIST.md](45_HISTORY_LIST.md)
+- [46_CONFIGURATION_LIST.md](46_CONFIGURATION_LIST.md)
+- [47_LOG_LIST.md](47_LOG_LIST.md)
+- [48_INTEGRATION_LIST.md](48_INTEGRATION_LIST.md)
+- [49_DASHBOARD_LIST.md](49_DASHBOARD_LIST.md)
 - [06_ER_DIAGRAM.md](06_ER_DIAGRAM.md)
 - [37_TABLE_RELATIONSHIPS.md](37_TABLE_RELATIONSHIPS.md)
 - [38_FOREIGN_KEYS.md](38_FOREIGN_KEYS.md)

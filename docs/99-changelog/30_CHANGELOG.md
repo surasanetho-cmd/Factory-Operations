@@ -13,6 +13,20 @@ Format inspired by Keep a Changelog; SemVer when software releases begin.
 
 ---
 
+## [0.3.0] — 2026-07-22
+
+### Added
+
+- Complete database architecture pack (design only — **no SQL**):
+  - [40_DATABASE_ARCHITECTURE.md](../30-database/40_DATABASE_ARCHITECTURE.md)
+  - [41_MODULE_RELATIONSHIPS.md](../30-database/41_MODULE_RELATIONSHIPS.md)
+  - [42_ENTITY_RELATIONSHIPS.md](../30-database/42_ENTITY_RELATIONSHIPS.md)
+  - [43_MASTER_DATA_LIST.md](../30-database/43_MASTER_DATA_LIST.md) through [49_DASHBOARD_LIST.md](../30-database/49_DASHBOARD_LIST.md)
+- Per-table: Purpose, Relationships, PK, FKs, Indexes, Scalability, Soft Delete, Audit
+- Review gate before generating migrations
+
+---
+
 ## [0.2.1] — 2026-07-22
 
 ### Changed
