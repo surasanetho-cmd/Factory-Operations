@@ -65,17 +65,20 @@ flowchart TB
 
 ## 3. Database Domain Separation
 
-| Domain | Schema / Prefix | Responsibility |
-|--------|-----------------|----------------|
-| Master | `master` | Reference data (users, roles, machines, lines, …) |
-| Transaction | `txn` | Operational documents (plans, orders, releases) |
-| History | `history` | Immutable change snapshots |
-| Log | `log` | Application, security, integration logs |
-| Configuration | `config` | Feature flags, UI prefs schema, system settings |
-| Integration | `integration` | External sync jobs, mappings, payloads |
-| Dashboard | `dashboard` | Widget layouts, saved views |
+PostgreSQL **schemas** (required — not table prefixes). Full rules: [04_DATABASE_STANDARD.md](04_DATABASE_STANDARD.md).
 
-See [04_DATABASE_STANDARD.md](04_DATABASE_STANDARD.md).
+| Schema | Responsibility |
+|--------|----------------|
+| `master` | Reference data (plant, users, roles, machines, lines, …) |
+| `txn` | Operational documents (plans, orders, OT, shutdowns, …) |
+| `history` | Immutable change snapshots |
+| `log` | Application, security, integration logs |
+| `config` | Feature flags, system settings, extensible prefs |
+| `integration` | Sync jobs, outbox, idempotency, file links, mappings |
+| `dashboard` | Widget layouts, saved views |
+
+Plant dimension: [33_PLANT_ORG_STANDARD.md](33_PLANT_ORG_STANDARD.md).  
+Async decoupling: [34_DOMAIN_EVENTS.md](34_DOMAIN_EVENTS.md).
 
 ---
 
@@ -115,8 +118,13 @@ Details: [16_HISTORY_STANDARD.md](16_HISTORY_STANDARD.md).
 
 ### 5.4 Notification Engine
 
-Template-driven Telegram (and future channels).  
-Details: [20_TELEGRAM_STANDARD.md](20_TELEGRAM_STANDARD.md).
+Template-driven Telegram (and future channels) driven by outbox events.  
+Details: [20_TELEGRAM_STANDARD.md](20_TELEGRAM_STANDARD.md), [34_DOMAIN_EVENTS.md](34_DOMAIN_EVENTS.md).
+
+### 5.5 Domain Outbox
+
+Transactional outbox for plan lifecycle, calendar invalidation, and integrations.  
+Details: [34_DOMAIN_EVENTS.md](34_DOMAIN_EVENTS.md).
 
 ---
 

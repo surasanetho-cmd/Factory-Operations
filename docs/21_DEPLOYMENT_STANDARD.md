@@ -45,21 +45,35 @@ flowchart LR
 
 ---
 
-## 4. Required Env Vars (categories)
+## 4. Environment Variables (canonical names)
 
-| Category | Examples |
-|----------|----------|
-| Supabase | URL, anon/publishable key, service role (server) |
-| App | `NEXT_PUBLIC_APP_URL` |
-| Google Drive | Client/service credentials |
-| Telegram | Bot token |
-| OpenAI | API key |
+| Variable | Scope | Purpose |
+|----------|-------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Public | Supabase API URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Publishable / anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server only | Privileged server operations |
+| `NEXT_PUBLIC_APP_URL` | Public | Canonical app URL |
+| `GOOGLE_DRIVE_CLIENT_EMAIL` / `GOOGLE_DRIVE_PRIVATE_KEY` | Server | Drive service account (or OAuth secrets as chosen) |
+| `TELEGRAM_BOT_TOKEN` | Server | Bot API |
+| `OPENAI_API_KEY` | Server | AI Assistant |
 
-Exact names documented when app scaffolding begins. No secrets in git.
+No secrets in git. Preview must not use Production Supabase.
 
 ---
 
-## 5. CI Expectations
+## 5. Backup & Disaster Recovery
+
+| Concern | Standard |
+|---------|----------|
+| Database | Enable Supabase automated backups on Production; document RPO target (default ≤ 24h until stricter ADR) |
+| Restore drill | Perform restore test at least when major schema phases complete |
+| App | Vercel rollback to prior deployment |
+| Secrets | Recreatable from password manager / Vercel env — not only from DB |
+| Point-in-time | Prefer PITR when project tier allows; note in runbook |
+
+---
+
+## 6. CI Expectations
 
 - Typecheck / lint / unit tests on PR
 - Migration validation when SQL changes
@@ -67,11 +81,12 @@ Exact names documented when app scaffolding begins. No secrets in git.
 
 ---
 
-## 6. Rollback
+## 7. Rollback
 
-- App: Vercel instant rollback to prior deployment
-- DB: forward-fix migrations preferred; destructive down migrations discouraged
+- App: Vercel instant rollback
+- DB: forward-fix migrations preferred; destructive downs discouraged
 - Feature flags to disable risky modules quickly
+- Deploy order: migrate DB (compatible) → deploy app; reverse on rollback only when app is backward-compatible with DB
 
 ---
 

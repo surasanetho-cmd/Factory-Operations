@@ -4,24 +4,23 @@
 
 ---
 
-## Phase 0 — Documentation Foundation (current)
+## Phase 0 — Documentation Foundation
 
-- Complete `/docs` standards (this set)
-- Decision log bootstrap
+- `/docs` standards `00`–`36` (including review remediation)
+- Decision log through ADR-011
 - No application code yet
 
 ---
 
 ## Phase 1 — Production Planning MVP
 
-1. Supabase project + schemas + masters seed (lines 110T–3200T, shifts, calendar)
-2. Auth + RBAC baseline
+1. Supabase schemas + masters seed (plant `SF1`, lines 110T–3200T, shifts, calendar, UoM, status codes)
+2. Auth + RBAC helpers + plant-scoped RLS
 3. App shell (sidebar, top nav, theme)
-4. Calendar Engine v1 (working day, holiday, shift, capacity)
-5. Plan board: daily / weekly / monthly
-6. Drag-and-drop scheduling + resource view
-7. Submit / approve / reject / release
-8. History + basic logging
+4. Calendar Engine v1 (assignment resolution, holiday, shift, OT, shutdown, capacity)
+5. Plan board: daily / weekly / monthly + drag-drop + resource view
+6. Submit / approve / reject / release + outbox events
+7. History + logging + idempotency keys
 
 ---
 

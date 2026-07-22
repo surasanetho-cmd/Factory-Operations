@@ -98,7 +98,56 @@
 
 ---
 
+## ADR-008 — PostgreSQL Schemas Required (Not Prefixes)
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-07-22 |
+| Status | Accepted |
+| Context | Docs allowed schema or prefix; ambiguity risks inconsistent DDL |
+| Decision | Use real Postgres schemas: `master`, `txn`, `history`, `log`, `config`, `integration`, `dashboard` |
+| Consequences | Migrations create schemas first; `public` only for views/wrappers |
+
+---
+
+## ADR-009 — Post-Release Plan Amendment
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-07-22 |
+| Status | Accepted |
+| Context | Released plans must stay stable for Production, but corrections will be needed |
+| Decision | No silent edits after release; use `txn.plan_amendment` + status machine |
+| Consequences | Phase 2 Production can rely on released snapshots; amendment is explicit |
+
+---
+
+## ADR-010 — Plant Dimension From Day One
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-07-22 |
+| Status | Accepted |
+| Context | Single plant today; multi-site / SAP org later |
+| Decision | `master.plant` + `plant_id` on plant-scoped masters/txns; seed `SF1` |
+| Consequences | Slightly more FKs now; avoids breaking redesign later |
+
+---
+
+## ADR-011 — BOM via part_material; Capacity XOR; Calendar Assignment
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-07-22 |
+| Status | Accepted |
+| Context | Review found wrong Part→Material ER, polymorphic capacity, missing calendar FKs |
+| Decision | `part_material` BOM; capacity XOR check; `calendar_id` on line/machine with plant default resolution; OT/shutdown txn tables named |
+| Consequences | Dictionary and ER updated; Calendar Engine inputs locked |
+
+---
+
 ## Related Documents
 
 - [00_PROJECT_CONSTITUTION.md](00_PROJECT_CONSTITUTION.md)
 - [30_CHANGELOG.md](30_CHANGELOG.md)
+- [36_DOCUMENTATION_REVIEW.md](36_DOCUMENTATION_REVIEW.md)

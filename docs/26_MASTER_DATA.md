@@ -1,37 +1,37 @@
 # 26 — Master Data
 
 **Product:** Smart-Factory Manufacturing Platform  
-**Rule:** Design and seed masters before transactions.
+**Rule:** Design and seed masters before transactions.  
+**Column authority:** [05_DATABASE_DICTIONARY.md](05_DATABASE_DICTIONARY.md).  
+**Plant:** [33_PLANT_ORG_STANDARD.md](33_PLANT_ORG_STANDARD.md).  
+**Codes:** [31_NUMBERING_STANDARD.md](31_NUMBERING_STANDARD.md).  
+**UoM:** [35_UOM_STANDARD.md](35_UOM_STANDARD.md).
 
 ---
 
-## 1. Master Catalog
+## 1. Master Catalog (Phase 1 required)
 
-| Master | Table | Phase 1 required |
-|--------|-------|------------------|
-| Users | `master.user_profile` | Yes |
-| Roles | `master.role` | Yes |
-| Permissions | `master.permission` | Yes |
-| Department | `master.department` | Yes |
-| Customer | `master.customer` | Yes |
-| Part List | `master.part` | Yes |
-| Material | `master.material` | Yes |
-| Process | `master.process` | Yes |
-| Machine | `master.machine` | Yes |
-| Production Line | `master.production_line` | Yes |
-| Shift | `master.shift` | Yes |
-| Calendar | `master.calendar` | Yes |
-| Holiday | `master.holiday` | Yes |
-| Capacity | `master.capacity` | Yes |
-| Reason Code | `master.reason_code` | Yes |
-| File Type | `master.file_type` | Yes (seed even if Drive later) |
-| Notification Template | `master.notification_template` | Yes (seed for Telegram later) |
-
-Junctions: `role_permission`, `user_role`, `part_process`.
+| Master | Table |
+|--------|-------|
+| Plant | `master.plant` |
+| Users | `master.user_profile` |
+| Roles / Permissions | `master.role`, `master.permission`, junctions |
+| Department | `master.department` |
+| UoM | `master.uom`, `master.uom_conversion` |
+| Customer / Part / Material / BOM | `customer`, `part`, `material`, `part_material` |
+| Process / Routing | `process`, `part_process` |
+| Machine / Production Line | `machine`, `production_line` |
+| Shift / Assignment | `shift`, `shift_assignment` |
+| Calendar / Holiday | `calendar`, `holiday` |
+| Capacity | `capacity` (XOR line/machine) |
+| Status codes | `status_code` |
+| Reason / File type / Notification / Number sequence | respective masters |
 
 ---
 
-## 2. Production Lines (seed)
+## 2. Seed — Plant & Lines
+
+**Plant:** `SF1` — Smart-Factory Plant 1
 
 | code | name | tonnage |
 |------|------|---------|
@@ -42,35 +42,28 @@ Junctions: `role_permission`, `user_role`, `part_process`.
 | `PL-800T` | 800 Ton | 800 |
 | `PL-3200T` | 3200 Ton | 3200 |
 
-Machines belong to lines; capacity defaults should reflect ~20–30 jobs/day planning envelope (exact numbers seeded and editable).
+Capacity defaults should reflect the planning envelope of ~20–30 jobs/day/line (editable in DB). Volume KPI: [01_PROJECT_VISION.md](01_PROJECT_VISION.md).
 
 ---
 
 ## 3. Relationships (summary)
 
 ```text
-Department → Users → Roles → Permissions
-Customer → Parts → Part_Process → Process
-Production_Line → Machines
-Calendar → Holidays
-Capacity → (Line|Machine) + Shift
+Plant → Departments, Lines, Machines, Calendars, Shifts, Txns
+Part → part_material → Material (BOM)
+Part → part_process → Process
+Line/Machine → calendar_id → Calendar → Holidays
+Capacity → (Line XOR Machine) + Shift
 ```
 
 ---
 
 ## 4. Governance
 
-1. Masters are soft-deleted, never hard-deleted.
-2. Codes are stable identifiers for integrations.
-3. Changing capacity/shifts is configuration — audit via history when impacting open plans.
-4. UI admin screens manage masters; no deploy required for routine value changes.
-
----
-
-## 5. Seed Ownership
-
-- `supabase/seed` (future) holds baseline JSON/SQL.
-- Environment-specific holidays may differ; keep structure identical.
+1. Soft delete only; codes stable for integrations.
+2. Capacity/shift changes audited when open plans exist.
+3. Idempotent seeds in `supabase/seed` (future); freeze production-line codes.
+4. No hardcode of seed values in UI.
 
 ---
 

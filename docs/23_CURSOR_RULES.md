@@ -18,15 +18,20 @@
 
 | Rule | Detail |
 |------|--------|
-| Database First | Design/update dictionary before implementing tables in silence |
-| Soft Delete | Never hard delete business rows |
-| No Hardcode | Lines, shifts, capacities, templates from DB |
-| No Duplicates | Search for existing components/APIs/tables first |
-| Calendar | Use Calendar Engine; do not fork date logic |
+| Docs first | Constitution → relevant standards → then code |
+| Database First | Update dictionary/ER before implementing tables |
+| Soft Delete | Never hard delete business rows ([04](04_DATABASE_STANDARD.md)) |
+| No Hardcode | Masters/config from DB ([26](26_MASTER_DATA.md)) |
+| No Duplicates | Search existing components/APIs/tables first |
+| Calendar | Use [18_CALENDAR_ENGINE.md](18_CALENDAR_ENGINE.md) only |
+| Plant | Include `plant_id` where plant-scoped ([33](33_PLANT_ORG_STANDARD.md)) |
+| Status / numbers | [32](32_STATUS_STATE_MACHINE.md), [31](31_NUMBERING_STANDARD.md) |
+| Events | Write outbox with mutations ([34](34_DOMAIN_EVENTS.md)) |
 | Security | No service role in client; no auth from user_metadata |
-| Docs sync | Update docs in the same change as behavior/schema |
-| Decision Log | Exceptions require [29_DECISION_LOG.md](29_DECISION_LOG.md) entry |
+| Docs sync | Same PR as behavior/schema changes |
+| Exceptions | [29_DECISION_LOG.md](29_DECISION_LOG.md) |
 
+Do not restate the full constitution here — follow [00_PROJECT_CONSTITUTION.md](00_PROJECT_CONSTITUTION.md).
 ---
 
 ## 3. Preferred Workflow

@@ -8,11 +8,10 @@
 ## 1. General
 
 1. TypeScript strict mode.
-2. No `any` unless justified and localized with comment + ADR if systemic.
+2. Follow [00_PROJECT_CONSTITUTION.md](00_PROJECT_CONSTITUTION.md) and [23_CURSOR_RULES.md](23_CURSOR_RULES.md).
 3. Prefer clarity over cleverness.
-4. **No hardcode** of business master data (lines, shifts, capacities, roles, templates).
-5. **No duplicate** APIs, components, or tables.
-6. Read `/docs` before implementing a feature.
+4. No hardcode of masters; no duplicate APIs/components/tables.
+5. Read `/docs` before implementing a feature — especially [04](04_DATABASE_STANDARD.md)/[05](05_DATABASE_DICTIONARY.md)/[18](18_CALENDAR_ENGINE.md)/[32](32_STATUS_STATE_MACHINE.md)/[33](33_PLANT_ORG_STANDARD.md)/[34](34_DOMAIN_EVENTS.md).
 
 ---
 

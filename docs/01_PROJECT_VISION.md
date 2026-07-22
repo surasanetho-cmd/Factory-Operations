@@ -7,88 +7,69 @@
 
 ## 1. Purpose
 
-Smart-Factory is an enterprise manufacturing platform that plans, executes, measures, and improves production operations. It starts with **Production Planning** and expands into Production, Warehouse, OEE, Quality, Maintenance, Dashboard, and external integrations without changing the core database architecture.
+Smart-Factory is an enterprise manufacturing platform that plans, executes, measures, and improves production. It starts with **Production Planning** and expands into Production, Warehouse, OEE, Quality, Maintenance, Dashboard, and integrations **without rewriting** the core database architecture.
 
 ---
 
 ## 2. Business Context
 
-### Production Lines (current)
+### Production lines (current)
 
-| Line | Capacity Class |
-|------|----------------|
-| 110 Ton | Press / forming line |
-| 250 Ton | Press / forming line |
-| 300 Ton | Press / forming line |
-| 600 Ton | Press / forming line |
-| 800 Ton | Press / forming line |
-| 3200 Ton | Press / forming line |
+| Line | Class |
+|------|-------|
+| 110 Ton | Press / forming |
+| 250 Ton | Press / forming |
+| 300 Ton | Press / forming |
+| 600 Ton | Press / forming |
+| 800 Ton | Press / forming |
+| 3200 Ton | Press / forming |
 
-Each line produces approximately **20–30 jobs per day**. Planning must remain usable at that volume across all lines simultaneously.
+**Volume KPI:** each line ≈ **20–30 jobs/day**. Planning UX and indexes must remain usable across all lines for day/week/month horizons.
+
+Canonical seed codes: [26_MASTER_DATA.md](26_MASTER_DATA.md). Plant: [33_PLANT_ORG_STANDARD.md](33_PLANT_ORG_STANDARD.md).
 
 ---
 
 ## 3. Planning Capabilities (Phase 1)
 
-Planning must support:
+Daily / weekly / monthly planning; capacity, machine, and shift planning; holiday and OT awareness; drag-and-drop; calendar timeline; resource view; hooks for future OEE and Store.
 
-- **Daily / Weekly / Monthly** planning horizons
-- **Capacity Planning** — available vs required capacity
-- **Machine Planning** — assign jobs to machines
-- **Shift Planning** — align work to shifts
-- **Holiday** and **OT** awareness
-- **Drag & Drop Planning**
-- **Calendar Timeline** view
-- **Resource View** (machines / lines / people as resources)
-- Extension hooks for future **OEE** and **Store / Warehouse**
+Engine: [18_CALENDAR_ENGINE.md](18_CALENDAR_ENGINE.md). Screens: [28_SCREEN_FLOW.md](28_SCREEN_FLOW.md).
 
 ---
 
-## 4. End-to-End Manufacturing Vision
+## 4. End-to-End Flow
+
+Authoritative workflow: [27_BUSINESS_FLOW.md](27_BUSINESS_FLOW.md).
 
 ```text
 Order → Planning → Approve → Release → Production → QC → Store → Shipping
 ```
 
-Phase 1 implements Planning (and approval/release states). Downstream modules consume the same masters, calendar, and audit model.
+Phase 1 implements through **Release**.
 
 ---
 
 ## 5. Future Modules
 
-| Module | Intent |
-|--------|--------|
-| Production | Execute released plans on the shop floor |
-| Store / Warehouse | Material and finished-goods inventory |
-| OEE | Availability, performance, quality metrics |
-| Quality | QC plans, inspections, non-conformance |
-| Maintenance | Preventive / corrective maintenance |
-| Dashboard | Cross-module KPIs and widgets |
-| SAP Integration | ERP sync for orders, materials, shipping |
-| Google Drive | Document and drawing storage |
-| Telegram | Operational alerts and approvals |
-| AI Assistant | Planning suggestions, Q&A, anomaly help |
+Module catalog and ownership: [07_MODULES.md](07_MODULES.md).  
+Phased delivery: [24_ROADMAP.md](24_ROADMAP.md).
 
 ---
 
 ## 6. Success Criteria (Planning Phase)
 
-1. Planners can schedule all lines for a day/week/month without hardcoding line definitions.
-2. Capacity, machine, and shift constraints are visible before release.
-3. Holidays, OT, and machine shutdowns come from the shared Calendar Engine.
-4. Drag-and-drop updates persist with audit history and versioning.
-5. New modules can attach to masters and calendar without schema redesign.
+1. All lines schedulable without hardcoded line lists.
+2. Capacity / machine / shift constraints visible before release.
+3. Holidays, OT, shutdowns from Calendar Engine.
+4. Drag-and-drop persists with audit history and versioning.
+5. New modules attach to masters, plant, calendar, and events without schema redesign.
 
 ---
 
 ## 7. Non-Goals (Phase 1)
 
-- Full shop-floor MES execution UI
-- Live OEE collection hardware integration
-- Complete SAP bidirectional sync
-- AI-driven auto-scheduling as the primary planner
-
-These remain in the roadmap ([24_ROADMAP.md](24_ROADMAP.md)).
+Full MES UI, live OEE hardware, complete SAP sync, AI auto-scheduling as primary planner — see roadmap.
 
 ---
 
@@ -98,3 +79,4 @@ These remain in the roadmap ([24_ROADMAP.md](24_ROADMAP.md)).
 - [07_MODULES.md](07_MODULES.md)
 - [27_BUSINESS_FLOW.md](27_BUSINESS_FLOW.md)
 - [24_ROADMAP.md](24_ROADMAP.md)
+- [36_DOCUMENTATION_REVIEW.md](36_DOCUMENTATION_REVIEW.md)

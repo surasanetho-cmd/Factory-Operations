@@ -1,21 +1,14 @@
 # 18 — Calendar Engine
 
 **Product:** Smart-Factory Manufacturing Platform  
-**Role:** Single shared engine for time, capacity, and resource availability
+**Role:** Single shared engine for time, capacity, and resource availability  
+**Law:** Constitution A4 — modules must not fork holiday/shift logic.
 
 ---
 
-## 1. Mandate
+## 1. Consumers
 
-One Calendar Engine is used by:
-
-- Planning
-- Production
-- Store
-- OEE
-- Dashboard
-
-Modules must not invent private holiday/shift logic.
+Planning, Production, Store, OEE, Dashboard (and Maintenance as a writer of windows).
 
 ---
 
@@ -24,78 +17,112 @@ Modules must not invent private holiday/shift logic.
 | Capability | Description |
 |------------|-------------|
 | Working Day | Resolve if a date is workable for a calendar |
-| Holiday | Master holidays applied to calendars |
-| Shift | Shift templates and assignments |
-| OT | Overtime windows beyond standard shift |
-| Machine Shutdown | Unavailability blocks |
-| Maintenance | Maintenance windows (from Maintenance module later) |
-| Capacity | Nominal and effective capacity per line/machine/shift |
-| Timeline | Continuous time axis for boards |
-| Resource | Resource-oriented lanes (machine/line) |
+| Holiday | From `master.holiday` |
+| Shift | Templates + `master.shift_assignment` |
+| OT | From `txn.ot_window` (approved) |
+| Machine Shutdown | From `txn.machine_shutdown` |
+| Maintenance | From Maintenance module windows (future) |
+| Capacity | From `master.capacity` (XOR line/machine) |
+| Timeline | Board time axis DTO |
+| Resource | Lanes for line/machine (crew later) |
 
 ---
 
-## 3. Domain Inputs (Master + Txn)
+## 3. Inputs (locked table names)
 
-**Masters:** `calendar`, `holiday`, `shift`, `capacity`, `production_line`, `machine`  
-**Future txn inputs:** shutdown events, maintenance orders, OT requests/approvals
+| Kind | Table |
+|------|-------|
+| Calendar | `master.calendar`, `master.holiday` |
+| Shift | `master.shift`, `master.shift_assignment` |
+| Capacity | `master.capacity` |
+| Line / machine | `master.production_line`, `master.machine` |
+| Plant default | `master.plant.default_calendar_id` |
+| OT | `txn.ot_window` |
+| Shutdown | `txn.machine_shutdown` |
+| Maintenance | `txn.maintenance_order` (future feed) |
 
-Effective availability = base shift hours − holidays − shutdowns − maintenance + approved OT.
+Effective availability ≈ assigned shift windows − holidays − shutdowns − maintenance + approved OT.
 
 ---
 
-## 4. Day Types
+## 4. Calendar Resolution Order
 
-| Type | UI treatment |
-|------|--------------|
-| `working` | Normal grid |
-| `holiday` | Muted / blocked for standard work |
+For a resource (machine preferred, else line):
+
+1. `machine.calendar_id` if set  
+2. Else `production_line.calendar_id` if set  
+3. Else `plant.default_calendar_id`  
+4. Else error (misconfiguration)
+
+Timezone for display/resolution comes from the resolved calendar (not the browser alone).
+
+---
+
+## 5. Day Types
+
+| Type | Meaning |
+|------|---------|
+| `working` | Standard work |
+| `holiday` | Non-working / blocked for standard plan |
 | `partial` | Shortened shift |
-| `shutdown` | Blocked for machine/line |
-| `ot` | Extended band |
+| `shutdown` | Resource unavailable |
+| `ot` | Extended band beyond shift |
 
 ---
 
-## 5. Engine API (logical)
+## 6. Engine API (logical)
 
 | Function | Result |
 |----------|--------|
+| `resolveCalendar(resource)` | calendar id + timezone |
 | `resolveDay(calendarId, date)` | Day type + windows |
 | `listWindows(resource, from, to)` | Available intervals |
 | `getCapacity(resource, date, shiftId?)` | Jobs/hours available |
-| `checkFit(resource, start, end, qty)` | Feasible? conflicts? |
+| `checkFit(resource, start, end, qty)` | Feasible + conflicts |
 | `timeline(resources[], from, to)` | Board projection DTO |
 
-Implement as server domain service and/or Postgres RPC (`engine_calendar_*`).
+Implement as domain service and/or RPC `engine_calendar_*`.
 
 ---
 
-## 6. Planning Integration
+## 7. Timezone & DST
 
-1. Drag-drop calls `checkFit` before persist (or persist + validate transactionally).
-2. Weekly/monthly views aggregate `getCapacity` vs planned load.
-3. Release blocked when unresolved conflicts exist (policy configurable).
-
----
-
-## 7. Timezone
-
-- Each `master.calendar` has a timezone.
-- Plant default calendar applies when resource-specific calendar absent.
-- Store all timestamps as `timestamptz`; display in calendar/user timezone.
+1. Persist all instants as `timestamptz`.
+2. Civil dates (`planned_date`, holidays) are calendar-local dates.
+3. Shifts with `crosses_midnight = true` span two civil dates in local TZ.
+4. Engine must be DST-safe (use TZ-aware libraries / Postgres TZ).
 
 ---
 
-## 8. Non-Goals
+## 8. Planning Integration
 
-- Payroll OT calculation (beyond planning windows)
-- Hardware machine PLC clocks (future OEE adapters feed events in)
+1. Drag-drop: `checkFit` then versioned persist + history.
+2. Aggregate capacity for week/month views.
+3. Release policy: block or warn on conflicts (`config.feature_flag` / settings).
+
+---
+
+## 9. Performance & Scale
+
+| Concern | Guidance |
+|---------|----------|
+| Board volume | ~20–30 jobs/line/day × 6 lines; month view ≈ thousands of items |
+| Caching | Cache resolved day windows per `(calendarId, date)` and resource windows per range; invalidate on holiday/shift/OT/shutdown writes |
+| Read models | Optional `dashboard` / projection tables for capacity aggregates — fed by domain events ([34](34_DOMAIN_EVENTS.md)) |
+| Hot path | Do not recompute full-plant calendar from scratch per pixel drag |
+
+---
+
+## 10. Non-Goals
+
+- Payroll OT money calculation
+- PLC clock sync (OEE adapters publish events later)
 
 ---
 
 ## Related Documents
 
 - [05_DATABASE_DICTIONARY.md](05_DATABASE_DICTIONARY.md)
-- [07_MODULES.md](07_MODULES.md)
+- [33_PLANT_ORG_STANDARD.md](33_PLANT_ORG_STANDARD.md)
 - [28_SCREEN_FLOW.md](28_SCREEN_FLOW.md)
 - [10_DESIGN_SYSTEM.md](10_DESIGN_SYSTEM.md)

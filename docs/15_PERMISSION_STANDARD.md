@@ -74,19 +74,36 @@ Exact permission matrices are seeded in DB — not hardcoded in UI conditionals 
 
 1. **UI** — hide/disable unauthorized controls.
 2. **API / Server Actions** — check permission before mutation.
-3. **RLS** — enforce row access using role membership functions.
+3. **RLS** — enforce row access using helpers below.
+4. **Plant scope** — [33_PLANT_ORG_STANDARD.md](33_PLANT_ORG_STANDARD.md).
 
 ---
 
-## 6. Implementation Guidelines
+## 6. RLS / Authz SQL Helpers (names locked)
 
-- Central helper: `authorize(userId, permissionCode)` / `requirePermission(...)`.
-- Do not scatter stringly role name checks (`if role === 'admin'`) in features; check permissions.
-- New screens register required permissions in docs and seed data together.
+Implement in a private schema (e.g. `authz`) or `master` with restricted grants:
+
+| Function | Returns | Purpose |
+|----------|---------|---------|
+| `authz.current_user_profile_id()` | `uuid` | Map `auth.uid()` → `master.user_profile.id` |
+| `authz.has_permission(permission_code text)` | `boolean` | Union of roles for current user |
+| `authz.has_permission_for_plant(permission_code text, plant_id uuid)` | `boolean` | Plant-scoped grant |
+| `authz.user_plant_ids()` | `setof uuid` | Plants the user may access |
+
+Policies MUST call these helpers — do not duplicate role joins in every policy.
 
 ---
 
-## 7. Planning Permission Matrix (baseline)
+## 7. Implementation Guidelines
+
+- App-layer: `authorize(userId, permissionCode)` / `requirePermission(...)`.
+- Do not scatter `if role === 'admin'` checks; check permission codes.
+- New screens register permissions in seed + docs together.
+- `user_role.user_id` → `user_profile.id` only.
+
+---
+
+## 8. Planning Permission Matrix (baseline)
 
 | Permission | admin | planner | supervisor | viewer |
 |------------|:-----:|:-------:|:----------:|:------:|
@@ -96,7 +113,7 @@ Exact permission matrices are seeded in DB — not hardcoded in UI conditionals 
 | `plan.production_plan.release` | ✓ | | ✓ | |
 | `master.*.manage` | ✓ | limited* | | |
 
-\*Planners may have read on masters; manage reserved for admin unless Decision Log expands.
+\*Planners may read masters; manage reserved for admin unless Decision Log expands.
 
 ---
 
@@ -105,3 +122,4 @@ Exact permission matrices are seeded in DB — not hardcoded in UI conditionals 
 - [14_SECURITY_STANDARD.md](14_SECURITY_STANDARD.md)
 - [26_MASTER_DATA.md](26_MASTER_DATA.md)
 - [05_DATABASE_DICTIONARY.md](05_DATABASE_DICTIONARY.md)
+- [33_PLANT_ORG_STANDARD.md](33_PLANT_ORG_STANDARD.md)

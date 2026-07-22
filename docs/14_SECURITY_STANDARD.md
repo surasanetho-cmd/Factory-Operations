@@ -52,11 +52,16 @@
 
 ---
 
-## 6. Data Protection
+## 6. Data Protection & Retention
 
-- Soft delete is not a security boundary — RLS still applies.
+- Soft delete is **not** a security boundary — RLS still applies.
+- Soft delete is **not** legal erasure (GDPR-style). Erasure requires a documented process that redacts PII while retaining non-personal audit keys where law allows.
 - PII minimized; audit access to sensitive logs.
-- Integration payloads stored in `integration` with retention policy.
+- Default retention targets (override in `config.system_setting`):
+  - `log.*`: 30–90 days then archive/delete
+  - `integration.outbox` completed: 30 days
+  - `history.*`: long retention (business default retain; archive cold storage later)
+  - Integration payloads: minimize; purge per connection policy
 
 ---
 
@@ -87,3 +92,4 @@ Security-relevant events go to `log.security_event` — see [17_LOG_STANDARD.md]
 - [15_PERMISSION_STANDARD.md](15_PERMISSION_STANDARD.md)
 - [08_API_STANDARD.md](08_API_STANDARD.md)
 - [21_DEPLOYMENT_STANDARD.md](21_DEPLOYMENT_STANDARD.md)
+- [33_PLANT_ORG_STANDARD.md](33_PLANT_ORG_STANDARD.md)

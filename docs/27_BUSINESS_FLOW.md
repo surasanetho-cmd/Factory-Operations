@@ -61,9 +61,11 @@ stateDiagram-v2
 ### Rules
 
 1. Only `draft` / `rejected` freely editable (policy may allow limited approved edits pre-release).
-2. `released` items are immutable in Planning except via controlled amendment process (future ADR).
+2. `released` plans/items are **not** silently edited — use `txn.plan_amendment` ([32_STATUS_STATE_MACHINE.md](32_STATUS_STATE_MACHINE.md), ADR-009).
 3. Calendar Engine validates working time and capacity on submit and release.
-4. Each transition writes history + optional Telegram event.
+4. Each transition writes history **and** an outbox domain event ([34_DOMAIN_EVENTS.md](34_DOMAIN_EVENTS.md)); Telegram consumes events via templates.
+5. Header vs item status rules: [32_STATUS_STATE_MACHINE.md](32_STATUS_STATE_MACHINE.md).
+6. Partial order fulfillment uses `sales_order_line.qty_allocated`.
 
 ---
 
@@ -73,7 +75,7 @@ stateDiagram-v2
 |-------|-----------------|
 | Planner | Create/edit plans, drag-drop, submit |
 | Supervisor | Approve/reject/release |
-| Admin | Masters, calendars, capacities |
+| Admin | Masters, calendars, capacities, plant |
 | Viewer | Read boards |
 | Operator | Future production confirmations |
 
@@ -84,9 +86,10 @@ stateDiagram-v2
 | Situation | Handling |
 |-----------|----------|
 | Capacity overflow | Warn/block per `config`; reason code required to override if allowed |
-| Holiday collision | Block or force OT request |
-| Machine shutdown | Auto-exclude resource windows |
-| Order change after plan | Amend plan item; re-approve if status requires |
+| Holiday collision | Block or create/approve `txn.ot_window` |
+| Machine shutdown | Auto-exclude via `txn.machine_shutdown` windows |
+| Order change after plan | Amend allocation; re-approve if status requires |
+| Change after release | `plan_amendment` workflow — not direct PATCH |
 
 ---
 
@@ -96,3 +99,4 @@ stateDiagram-v2
 - [07_MODULES.md](07_MODULES.md)
 - [28_SCREEN_FLOW.md](28_SCREEN_FLOW.md)
 - [18_CALENDAR_ENGINE.md](18_CALENDAR_ENGINE.md)
+- [32_STATUS_STATE_MACHINE.md](32_STATUS_STATE_MACHINE.md)

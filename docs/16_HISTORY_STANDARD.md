@@ -6,16 +6,17 @@
 
 ## 1. Purpose
 
-History provides an immutable audit trail of significant business changes for compliance, dispute resolution, and planning rollback analysis.
+Immutable audit trail of significant business changes for compliance, disputes, and planning analysis.
 
 ---
 
 ## 2. Principles
 
 1. History rows are **append-only** — never update or hard-delete history.
-2. Soft delete of a business entity writes a history event.
-3. Optimistic `version` on the live row must match the latest history sequence conceptually.
-4. Store enough context to reconstruct before/after without joining deleted-only data.
+2. Soft delete / restore of a business entity writes a history event.
+3. `version` on the history row equals the **live entity version after** the mutation.
+4. One primary history row per successful mutation (do not duplicate via triggers + app both without coordination).
+5. Store enough to reconstruct before/after without needing deleted-only joins.
 
 ---
 
@@ -23,64 +24,51 @@ History provides an immutable audit trail of significant business changes for co
 
 | Event | Required |
 |-------|----------|
-| Create entity | Yes (optional snapshot) |
-| Update meaningful fields | Yes |
+| Create / update meaningful fields | Yes |
 | Soft delete / restore | Yes |
-| Status transitions (approve, release) | Yes |
+| Status transitions | Yes |
 | Drag-and-drop reschedule | Yes |
-| Pure UI preference change | No (config only) |
-| High-volume telemetry | Prefer `log` or dedicated samples, not history |
+| Pure UI preference change | No |
+| High-volume telemetry | Prefer `log` / samples |
 
 ---
 
-## 4. Table Patterns
-
-### Entity-specific
-
-Example: `history.production_plan_item_history`
+## 4. Column Pattern (entity-specific)
 
 | Column | Notes |
 |--------|-------|
 | `id` | UUID |
-| `production_plan_item_id` | FK to live row |
-| `version` | Version after change |
+| `{entity}_id` | FK to live row |
+| `version` | Live version after change |
 | `change_type` | `create` \| `update` \| `soft_delete` \| `restore` \| `status` |
-| `before_json` | Previous state |
-| `after_json` | New state |
-| `changed_fields` | Array/text list |
+| `before_json` / `after_json` | Snapshots |
+| `changed_fields` | List of fields |
 | `changed_at` | timestamptz |
-| `changed_by` | uuid |
+| `changed_by` | → `user_profile.id` |
 
-### Generic
+Generic: `history.entity_change` with `entity_type`, `entity_id`.
 
-`history.entity_change` for cross-cutting entities with `entity_type`, `entity_id`.
-
----
-
-## 5. Payload Guidelines
-
-- Prefer structured JSON snapshots of business fields (exclude secrets).
-- Include foreign key IDs and display codes when helpful.
-- Do not store entire unrelated graphs.
+History tables **omit** full Audit\* (`updated_*`, `deleted_*`, `is_active`) — see [04](04_DATABASE_STANDARD.md) exceptions.
 
 ---
 
-## 6. Retention
+## 5. Retention
 
-- Planning history: long retention (business default: retain indefinitely unless legal policy says otherwise).
-- Define archival jobs later via `config` — do not hardcode retention in app logic.
+- Business default: retain planning history long-term; archive cold later via config.
+- Soft delete of live rows does **not** delete history.
+- Legal erasure of PII may redact `changed_by` display fields per [14](14_SECURITY_STANDARD.md) — process TBD (P2).
 
 ---
 
-## 7. Access
+## 6. Access
 
-- Reading history requires `*.read` plus optional `*.history.read` if separated.
-- History is not a bypass for RLS on sensitive fields — redact as needed.
+Requires entity `*.read` plus optional `*.history.read` if separated. History is not an RLS bypass.
 
 ---
 
 ## Related Documents
 
 - [04_DATABASE_STANDARD.md](04_DATABASE_STANDARD.md)
-- [17_LOG_STANDARD.md](17_LOG_STANDARD.md)
 - [05_DATABASE_DICTIONARY.md](05_DATABASE_DICTIONARY.md)
+- [17_LOG_STANDARD.md](17_LOG_STANDARD.md)
+- [34_DOMAIN_EVENTS.md](34_DOMAIN_EVENTS.md)

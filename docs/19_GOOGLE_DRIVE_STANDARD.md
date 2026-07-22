@@ -23,12 +23,12 @@ Google Drive stores collaborative documents (drawings, work instructions, plan e
 
 | Concept | Storage |
 |---------|---------|
-| Connection | `integration.connection` (type=`google_drive`) |
+| Connection | `integration.connection` (`system_type=google_drive`) |
 | External file id map | `integration.id_map` |
-| Attachments metadata | Module txn table or shared `integration.file_link` (entity_type, entity_id, drive_file_id, file_type_id, name) |
+| Attachments | `integration.file_link` (`entity_type`, `entity_id`, `drive_file_id`, `storage_path`, `file_type_id`, `name`) |
 | Sync runs | `integration.sync_job` |
 
-Exact `file_link` table is added when Drive phase starts — document in dictionary then; do not duplicate per module.
+`file_link` is in the dictionary ([05](05_DATABASE_DICTIONARY.md)). Prefer Drive for collaborative docs; Supabase Storage only for app-private blobs. One attachment table — do not duplicate per module.
 
 ---
 

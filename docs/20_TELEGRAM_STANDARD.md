@@ -48,9 +48,10 @@ Renderer substitutes placeholders; missing values fail safe (log + skip or gener
 ## 5. Delivery Rules
 
 1. Check feature flag `telegram_notifications`.
-2. Resolve recipients by role/subscription.
-3. Send via Bot API; record `log.integration_event`.
-4. Retry transient failures with backoff; dead-letter after N attempts in `integration.sync_job`.
+2. Prefer consuming **outbox** events ([34_DOMAIN_EVENTS.md](34_DOMAIN_EVENTS.md)) — do not send Telegram directly from UI handlers.
+3. Resolve recipients by role/subscription/plant.
+4. Send via Bot API; record `log.integration_event`.
+5. Retry transient failures with backoff; dead-letter after N attempts.
 
 ---
 

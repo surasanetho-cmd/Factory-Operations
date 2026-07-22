@@ -92,18 +92,22 @@ Module codes match [07_MODULES.md](07_MODULES.md).
 ## 6. Concurrency
 
 - Updates require `version` in body.
-- On mismatch → `409` with `PLAN_VERSION_CONFLICT` (or entity-specific code).
+- On mismatch → `409` with entity-specific code (e.g. `PLAN_VERSION_CONFLICT`).
+- Optional **plan lease** header/body (`lease_token`) when `config.feature_flag` `plan_lease` enabled — reduces multi-planner collision beyond optimistic locking ([04](04_DATABASE_STANDARD.md)).
 
 ---
 
 ## 7. Idempotency
 
-- Optional header `Idempotency-Key` for POST create/actions.
-- Store key in `integration` or `log` as appropriate for replay safety.
+1. Header: `Idempotency-Key` (required for POST create and workflow actions that may retry).
+2. Store: `integration.idempotency_key` with `key`, `user_id`, `route`, `request_hash`, `response_json`, `expires_at`.
+3. Same key + same hash → replay stored response.
+4. Same key + different hash → `409 IDEMPOTENCY_KEY_REUSE`.
+5. Default TTL: 24h (configurable).
 
 ---
 
-## 8. Status Codes
+## 8. HTTP Status Codes
 
 | Code | Meaning |
 |------|---------|
@@ -114,15 +118,32 @@ Module codes match [07_MODULES.md](07_MODULES.md).
 | 401 | Unauthenticated |
 | 403 | Forbidden |
 | 404 | Not found or soft-deleted hidden |
-| 409 | Conflict (version / unique) |
-| 422 | Business rule violation |
+| 409 | Conflict (version / unique / idempotency) |
+| 422 | Business rule / illegal state transition |
 | 500 | Unexpected server error |
 
 ---
 
-## 9. Supabase RPC
+## 9. Error Code Registry (baseline)
 
-Use RPC for complex calendar/capacity calculations. RPC names: `engine_calendar_*`, `plan_*`. Document in module API specs when implemented.
+| `error.code` | When |
+|--------------|------|
+| `VALIDATION_ERROR` | Schema/input invalid |
+| `FORBIDDEN` | Permission denied |
+| `NOT_FOUND` | Missing or soft-deleted |
+| `PLAN_VERSION_CONFLICT` | Stale `version` |
+| `ILLEGAL_STATE_TRANSITION` | Status machine violation |
+| `CALENDAR_CONFLICT` | Holiday/shutdown/OT/capacity fit failure |
+| `IDEMPOTENCY_KEY_REUSE` | Key reused with different body |
+| `NUMBER_ALLOCATION_FAILED` | Sequence failure |
+
+Extend in module specs; do not invent one-off codes for the same case.
+
+---
+
+## 10. Supabase RPC
+
+Use RPC for complex calendar/capacity calculations: `engine_calendar_*`, `plan_*`. Document in module API specs when implemented.
 
 ---
 
@@ -131,3 +152,5 @@ Use RPC for complex calendar/capacity calculations. RPC names: `engine_calendar_
 - [12_CODING_STANDARD.md](12_CODING_STANDARD.md)
 - [14_SECURITY_STANDARD.md](14_SECURITY_STANDARD.md)
 - [15_PERMISSION_STANDARD.md](15_PERMISSION_STANDARD.md)
+- [32_STATUS_STATE_MACHINE.md](32_STATUS_STATE_MACHINE.md)
+- [34_DOMAIN_EVENTS.md](34_DOMAIN_EVENTS.md)

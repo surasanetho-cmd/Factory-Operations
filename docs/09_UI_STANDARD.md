@@ -43,13 +43,14 @@
 
 | Preference | Values | Storage |
 |------------|--------|---------|
-| Theme | `light`, `dark`, `auto` | `master.user_profile` / `config.user_preference` |
-| Font size | scale factor (e.g. 90–120%) | same |
-| Compact mode | on/off | same |
-| Sidebar collapsed | on/off | same |
+| Theme | `light`, `dark`, `auto` | `master.user_profile.theme_pref` |
+| Font size | scale 90–120% | `master.user_profile.font_scale` |
+| Compact mode | on/off | `master.user_profile.compact_mode` |
+| Sidebar collapsed | on/off | `master.user_profile` (column or profile JSON — keep on profile) |
+| Extensible prefs | key/value | `config.user_preference` only |
 | Dashboard layout | widget grid | `dashboard.layout` |
 
-Auto theme follows OS preference.
+Ownership matrix: [05_DATABASE_DICTIONARY.md](05_DATABASE_DICTIONARY.md) §9. Auto theme follows OS preference.
 
 ---
 

@@ -32,13 +32,15 @@ This constitution defines non-negotiable laws. No feature, migration, or UI may 
 
 | Law | Statement |
 |-----|-----------|
-| D1 | Separate domains: **Master**, **Transaction**, **History**, **Log**, **Configuration**, **Integration**, **Dashboard**. |
-| D2 | Every business table MUST include: `id`, `created_at`, `updated_at`, `created_by`, `updated_by`, `deleted_at`, `deleted_by`, `is_active`, `version`. |
+| D1 | Separate domains via **PostgreSQL schemas**: Master, Transaction, History, Log, Configuration, Integration, Dashboard — mechanics in [04_DATABASE_STANDARD.md](04_DATABASE_STANDARD.md). |
+| D2 | Mutable business tables MUST include Audit\* columns — defined in [04_DATABASE_STANDARD.md](04_DATABASE_STANDARD.md). |
 | D3 | Primary keys are **UUID**. |
 | D4 | Use **Foreign Keys**. Referential integrity is mandatory. |
 | D5 | **Never hard delete** business data. Soft delete only (`deleted_at` / `deleted_by`). |
 | D6 | **No duplicate tables** for the same business concept. |
 | D7 | Master data exists before any transaction that references it. |
+| D8 | **Plant-scoped design** — plant/site dimension exists from day one ([33_PLANT_ORG_STANDARD.md](33_PLANT_ORG_STANDARD.md)). |
+| D9 | **Statuses and numbers are config-driven** — [32_STATUS_STATE_MACHINE.md](32_STATUS_STATE_MACHINE.md), [31_NUMBERING_STANDARD.md](31_NUMBERING_STANDARD.md). |
 
 ---
 
