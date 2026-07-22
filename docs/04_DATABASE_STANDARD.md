@@ -2,13 +2,12 @@
 
 **Product:** Smart-Factory Manufacturing Platform  
 **Engine:** PostgreSQL (Supabase)  
-**Authority:** Mechanics live here. Binding laws live in [00_PROJECT_CONSTITUTION.md](00_PROJECT_CONSTITUTION.md).
+**Authority:** Naming, Audit\*, soft-delete, keys.  
+**Companions:** [05](05_DATABASE_DICTIONARY.md) · [06](06_ER_DIAGRAM.md) · [37](37_TABLE_RELATIONSHIPS.md) · [38](38_FOREIGN_KEYS.md) · [39](39_INDEX_STRATEGY.md)
 
 ---
 
 ## 1. Domain Separation (PostgreSQL Schemas Required)
-
-**Decision:** Use real PostgreSQL schemas — **not** table-name prefixes. See ADR-008 in [29_DECISION_LOG.md](29_DECISION_LOG.md).
 
 | Schema | Purpose |
 |--------|---------|
@@ -19,152 +18,158 @@
 | `config` | System and feature configuration |
 | `integration` | External sync, outbox, idempotency |
 | `dashboard` | Dashboard layouts and widgets |
+| `authz` | Private RLS helper functions (not exposed via Data API) |
 
-`public` may hold views or compatibility wrappers only when necessary. Grant access carefully; prefer domain schemas for base tables.
+`public` — views/wrappers only when necessary.
 
 ---
 
-## 2. Mandatory Columns (Business Tables)
+## 2. Naming Convention
 
-Every **mutable business table** MUST include **Audit\***:
+### 2.1 General
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | `uuid` | PK, default `gen_random_uuid()` |
-| `created_at` | `timestamptz` | Default `now()` |
-| `updated_at` | `timestamptz` | Trigger or application |
+| Object | Rule | Example |
+|--------|------|---------|
+| Schema | lowercase singular domain noun | `master`, `txn` |
+| Table | `snake_case`, **singular** | `production_plan_item` |
+| Column | `snake_case` | `planned_start_at` |
+| Primary key | always `id` `uuid` | `id` |
+| Foreign key column | `{referenced_table}_id` | `machine_id` → `master.machine` |
+| Boolean | `is_` / `has_` prefix | `is_active`, `crosses_midnight` |
+| Timestamp | `*_at` | `created_at`, `planned_end_at` |
+| Date | `*_date` | `holiday_date`, `order_date` |
+| Quantity | `qty_*` or `qty` | `qty_ordered` |
+| JSON | `*_json` | `contact_json`, `payload_json` |
+| Business code | `code` | line/machine/part codes |
+| Document number | `{entity}_no` | `plan_no`, `order_no` |
+| Status | `status_code` (text; lookup `master.status_code`) | `draft` |
+| Soft delete | `deleted_at`, `deleted_by` | — |
+
+### 2.2 Constraints & Indexes
+
+| Object | Pattern | Example |
+|--------|---------|---------|
+| Primary key | `pk_{table}` | `pk_machine` |
+| Foreign key | `fk_{table}_{column}` | `fk_machine_production_line_id` |
+| Unique | `uq_{table}_{cols}` | `uq_production_line_plant_code` |
+| Check | `ck_{table}_{rule}` | `ck_capacity_line_xor_machine` |
+| Index | `ix_{table}_{cols}` | `ix_plan_item_line_start` |
+| Partial unique | same + `_active` suffix when filtered | `uq_part_plant_code_active` |
+
+### 2.3 Functions & Triggers
+
+| Object | Pattern | Example |
+|--------|---------|---------|
+| Authz helper | `authz.{name}` | `authz.has_permission` |
+| Calendar RPC | `engine_calendar_{action}` | `engine_calendar_check_fit` |
+| `updated_at` trigger | `trg_{table}_set_updated_at` | — |
+| Soft-delete guard | optional `trg_{table}_no_hard_delete` | — |
+
+### 2.4 Status & Lookups
+
+- Prefer `master.*` lookup tables over PostgreSQL `ENUM` types.
+- `status_code` columns store the **code** string; must match `master.status_code` for the table’s `entity_type`.
+- Do not use free-text UoM — use `uom_id`.
+
+### 2.5 Reserved words
+
+Avoid column names: `user`, `order`, `group`, `limit`, `offset` as bare identifiers — use `user_profile`, `sales_order`, etc.
+
+---
+
+## 3. Mandatory Columns (Audit\*)
+
+Every **mutable business table** includes:
+
+| Column | Type | Default / notes |
+|--------|------|-----------------|
+| `id` | `uuid` | PK, `gen_random_uuid()` |
+| `created_at` | `timestamptz` | `now()` |
+| `updated_at` | `timestamptz` | `now()`; maintained by trigger |
 | `created_by` | `uuid` | FK → `master.user_profile.id` |
 | `updated_by` | `uuid` | FK → `master.user_profile.id` |
-| `deleted_at` | `timestamptz` | Null when not deleted |
+| `deleted_at` | `timestamptz` | NULL = not deleted |
 | `deleted_by` | `uuid` | FK → `master.user_profile.id` |
-| `is_active` | `boolean` | Default `true` |
-| `version` | `integer` | Optimistic concurrency; start at `1` |
+| `is_active` | `boolean` | `true` |
+| `version` | `integer` | `1`; optimistic lock |
 
 **Never hard delete** business rows.
 
-### 2.1 Audit\* Exceptions (document per table in dictionary)
+### 3.1 Pattern codes (used in dictionary)
 
-| Pattern | Required columns | Omit |
-|---------|------------------|------|
-| Mutable business (`master.*`, most `txn.*`) | Full Audit\* | — |
-| Append-only history | `id`, `created_at` (as `changed_at`), `created_by` (as `changed_by`), entity FK, snapshot fields | `updated_*`, `deleted_*`, `is_active`, live `version` bump |
-| Append-only log | `id`, `created_at`, context columns | Full Audit\* |
-| Junction (`role_permission`, `user_role`, `part_process`, `part_material`) | Full Audit\* **or** minimal `id`, `created_at`, `created_by` + soft-delete pair — choose one style per table and list in [05](05_DATABASE_DICTIONARY.md) | — |
-| Action records (`plan_approval`, `plan_release`) | Full Audit\* preferred; action timestamps (`acted_at`) are additional, not replacements | — |
-
----
-
-## 3. Naming Conventions
-
-| Object | Convention | Example |
-|--------|------------|---------|
-| Tables | `snake_case`, **singular** | `master.machine` |
-| Columns | `snake_case` | `production_line_id` |
-| FK columns | `{referenced_table}_id` | `machine_id` |
-| Business codes | `code` + partial unique where `deleted_at IS NULL` | `PL-110T` |
-| Document numbers | `{entity}_no` — format in [31_NUMBERING_STANDARD.md](31_NUMBERING_STANDARD.md) | `plan_no` |
-| Statuses | FK or code → `master.status_code` — [32_STATUS_STATE_MACHINE.md](32_STATUS_STATE_MACHINE.md) | — |
-| Lookups | Prefer `master` tables over Postgres ENUMs | `master.uom`, `master.reason_code` |
+| Pattern | Columns |
+|---------|---------|
+| **A** (full Audit\*) | all nine columns above |
+| **J** (junction) | `id`, `created_at`, `created_by`, `deleted_at`, `deleted_by`, `is_active` (no `version` / `updated_*` required) |
+| **H** (history) | `id`, entity FK, `version`, `change_type`, `before_json`, `after_json`, `changed_fields`, `changed_at`, `changed_by` |
+| **L** (log) | `id`, `created_at`, + event columns (no Audit\*) |
+| **E** (append event with Audit\*) | full Audit\* + action-specific `acted_at` / `acted_by` |
 
 ---
 
-## 4. Keys and Relationships
+## 4. Keys & Integrity
 
-1. PK = UUID.
-2. All relationships use Foreign Keys.
-3. `created_by` / `updated_by` / `deleted_by` / `user_role.user_id` → **`master.user_profile.id` only** (never raw `auth.users.id` in business FKs).
-4. `user_profile.auth_user_id` → `auth.users.id`, **UNIQUE NOT NULL**.
-5. Cascade: `ON DELETE RESTRICT` / `NO ACTION` for masters referenced by transactions.
-6. Partial unique indexes: `(code) WHERE deleted_at IS NULL` (scoped by plant when plant-owned — see [33_PLANT_ORG_STANDARD.md](33_PLANT_ORG_STANDARD.md)).
+1. PK = UUID on every table.
+2. All relationships declared as Foreign Keys — catalog [38_FOREIGN_KEYS.md](38_FOREIGN_KEYS.md).
+3. Business FKs for actors → `master.user_profile.id` only.
+4. `user_profile.auth_user_id` → `auth.users(id)` UNIQUE NOT NULL.
+5. Referenced masters: `ON DELETE RESTRICT` (soft-delete parent instead).
+6. Optional children sometimes `ON DELETE CASCADE` only for pure owned dependents (e.g. widgets under layout) — listed explicitly in FK catalog.
+7. Partial unique indexes for soft-deleted codes.
 
-### 4.1 Required uniqueness (baseline)
+### CHECK rules (baseline)
 
-| Table | Unique when active |
-|-------|-------------------|
-| `master.user_profile` | `auth_user_id`; `employee_code` (per plant if multi-plant) |
-| `master.role` / `permission` / many masters | `code` (+ `plant_id` when plant-scoped) |
-| `master.role_permission` | `(role_id, permission_id)` |
-| `master.user_role` | `(user_id, role_id)` |
-| `master.holiday` | `(calendar_id, holiday_date)` |
-| `txn.production_plan` | `plan_no` |
-| `txn.sales_order` | `order_no` |
-
-### 4.2 Capacity XOR rule
-
-`master.capacity` MUST reference **exactly one** of:
-
-- `production_line_id` (line-level capacity), **or**
-- `machine_id` (machine-level capacity)
-
-Enforce with `CHECK` (one null, one not null). Do not set both.
+| Constraint | Rule |
+|------------|------|
+| `ck_capacity_line_xor_machine` | exactly one of `production_line_id`, `machine_id` |
+| `ck_ot_window_resource` | at least one of line/machine; prefer XOR same as capacity |
+| `ck_shift_assignment_scope` | not both line and machine set |
+| `ck_plan_item_time_order` | `planned_end_at` > `planned_start_at` |
+| `ck_uom_conversion_positive` | `factor` > 0 |
+| `ck_qty_non_negative` | quantities ≥ 0 |
 
 ---
 
-## 5. Soft Delete Rules
+## 5. Soft Delete & Concurrency
 
-1. Set `deleted_at`, `deleted_by`, typically `is_active = false`.
-2. Default queries: `deleted_at IS NULL`.
-3. Restore clears delete fields, bumps `version`, writes history.
-4. Soft delete ≠ legal erasure (see [14_SECURITY_STANDARD.md](14_SECURITY_STANDARD.md) retention).
-
----
-
-## 6. Versioning / Concurrency
-
-1. Clients send expected `version` on update.
-2. Mismatch → conflict (`409`).
-3. Success increments `version` and writes history when required.
-4. For multi-planner boards, also support **optional plan lease / line lock** (config flag) — see [08_API_STANDARD.md](08_API_STANDARD.md). Optimistic version alone is insufficient at scale.
+- Soft delete sets `deleted_at`, `deleted_by`, usually `is_active = false`.
+- Default reads: `WHERE deleted_at IS NULL`.
+- Updates require matching `version`; success increments `version`.
+- Optional plan lease via feature flag ([08](08_API_STANDARD.md)).
 
 ---
 
-## 7. Indexes (Planning baseline)
+## 6. Index Strategy (summary)
 
-Document indexes with tables; minimum for boards:
+Full catalog: [39_INDEX_STRATEGY.md](39_INDEX_STRATEGY.md).
 
-| Table | Index |
-|-------|-------|
-| `txn.production_plan_item` | `(production_plan_id)` WHERE `deleted_at IS NULL` |
-| `txn.production_plan_item` | `(production_line_id, planned_start_at)` WHERE `deleted_at IS NULL` |
-| `txn.production_plan_item` | `(machine_id, planned_start_at)` WHERE `deleted_at IS NULL` |
-| `txn.production_plan_item` | `(planned_date)` WHERE `deleted_at IS NULL` |
-| `txn.production_plan` | `(status)`, `(period_start, period_end)` |
-| `master.holiday` | `(calendar_id, holiday_date)` |
-| `history.*` | `(entity_id, changed_at DESC)` or specific FK |
+Principles:
+
+1. Partial indexes on active rows (`deleted_at IS NULL`) for board/query paths.
+2. Unique business keys as partial uniques.
+3. Time-range access via `(resource_id, planned_start_at)` / `(start_at, end_at)`.
+4. History/log ordered by `(entity_id, changed_at DESC)`.
+5. Outbox worker: `(status_code, available_at)` WHERE pending.
 
 ---
 
-## 8. RLS and Security
+## 7. RLS
 
-1. RLS on all exposed tables.
-2. Policies use helpers in [15_PERMISSION_STANDARD.md](15_PERMISSION_STANDARD.md).
-3. Never authorize from editable `user_metadata`.
-4. Service role never in browser.
+Enable RLS on all exposed tables. Helpers in `authz` schema — [15_PERMISSION_STANDARD.md](15_PERMISSION_STANDARD.md).
 
 ---
 
-## 9. Seed and Migration
+## 8. Circular dependency: Plant ↔ Calendar
 
-1. Masters seeded via idempotent seeds — [26_MASTER_DATA.md](26_MASTER_DATA.md).
-2. Migrations via `supabase migration new …` only.
-3. Same PR updates [05](05_DATABASE_DICTIONARY.md) and [06](06_ER_DIAGRAM.md).
-4. No duplicate tables for the same concept (reserved names in dictionary § future).
-
----
-
-## 10. Scalability Notes
-
-- Design with **`plant_id`** on plant-scoped masters/txns from day one ([33](33_PLANT_ORG_STANDARD.md)), even if Phase 1 seeds one plant.
-- Plan for partitioning/archival of `history`, `log`, future `oee_sample`, `stock_movement`.
-- Board projections / capacity aggregates are allowed read models — not duplicate systems of record ([34_DOMAIN_EVENTS.md](34_DOMAIN_EVENTS.md)).
+1. Insert `master.calendar` with `plant_id` (plant row may exist with `default_calendar_id` NULL).
+2. Update `master.plant.default_calendar_id`.
+3. FK `plant.default_calendar_id` → `calendar.id` is **DEFERRABLE** or applied after both rows exist.
 
 ---
 
 ## Related Documents
 
 - [05_DATABASE_DICTIONARY.md](05_DATABASE_DICTIONARY.md)
-- [16_HISTORY_STANDARD.md](16_HISTORY_STANDARD.md)
-- [31_NUMBERING_STANDARD.md](31_NUMBERING_STANDARD.md)
-- [32_STATUS_STATE_MACHINE.md](32_STATUS_STATE_MACHINE.md)
-- [33_PLANT_ORG_STANDARD.md](33_PLANT_ORG_STANDARD.md)
-- [35_UOM_STANDARD.md](35_UOM_STANDARD.md)
+- [37_TABLE_RELATIONSHIPS.md](37_TABLE_RELATIONSHIPS.md)
+- [38_FOREIGN_KEYS.md](38_FOREIGN_KEYS.md)
+- [39_INDEX_STRATEGY.md](39_INDEX_STRATEGY.md)

@@ -1,160 +1,681 @@
-# 05 — Database Dictionary
+# 05 — Database Dictionary (Complete)
 
 **Product:** Smart-Factory Manufacturing Platform  
-**Phase coverage:** Masters + Calendar + Planning + reserved future inputs  
-**Audit\*:** see [04_DATABASE_STANDARD.md](04_DATABASE_STANDARD.md)
+**Engine:** PostgreSQL  
+**Patterns:** **A** / **J** / **H** / **L** / **E** — [04_DATABASE_STANDARD.md](04_DATABASE_STANDARD.md)  
+**Null:** columns are NOT NULL unless marked **N** (nullable).  
+**Types:** PostgreSQL types.
+
+Audit\* columns for pattern **A** are not repeated on every table — assume present unless another pattern is stated.
 
 ---
 
-## 1. Schema: `master`
+## 0. Conventions in this dictionary
 
-### 1.1 Organization & Identity
-
-| Table | Purpose | Key columns (beyond Audit*) | Notes |
-|-------|---------|-----------------------------|-------|
-| `master.plant` | Site / plant | `code`, `name`, `timezone`, `default_calendar_id` | Required for scalability; Phase 1 seeds one plant |
-| `master.department` | Org unit | `code`, `name`, `plant_id`, `parent_id` | |
-| `master.user_profile` | App user | `auth_user_id` (UNIQUE NOT NULL → `auth.users`), `employee_code`, `display_name`, `email`, `department_id`, `default_plant_id`, `locale`, `timezone`, `theme_pref`, `font_scale`, `compact_mode` | Shell prefs live here |
-| `master.role` | Role | `code`, `name`, `description` | Global unless noted |
-| `master.permission` | Permission atom | `code`, `module`, `action`, `resource`, `description` | |
-| `master.role_permission` | Role ↔ permission | `role_id`, `permission_id` | Unique pair; minimal audit OK |
-| `master.user_role` | User ↔ role | `user_id` → `user_profile.id`, `role_id`, optional `plant_id` | Unique `(user_id, role_id, plant_id)` |
-
-### 1.2 Commercial & Product
-
-| Table | Purpose | Key columns | Notes |
-|-------|---------|-------------|-------|
-| `master.uom` | Unit of measure | `code`, `name`, `dimension` | [35_UOM_STANDARD.md](35_UOM_STANDARD.md) |
-| `master.uom_conversion` | Conversion | `from_uom_id`, `to_uom_id`, `factor` | |
-| `master.customer` | Customer | `code`, `name`, `plant_id` nullable, `contact_json` | |
-| `master.part` | Part | `code`, `name`, `customer_id`, `revision`, `uom_id` | Not free-text UoM |
-| `master.material` | Material | `code`, `name`, `uom_id`, `spec_json` | |
-| `master.part_material` | BOM link | `part_id`, `material_id`, `qty_per`, `uom_id`, `sequence` | **Replaces** incorrect Part→Material ER edge |
-| `master.process` | Process | `code`, `name`, `sequence_hint` | |
-| `master.part_process` | Routing | `part_id`, `process_id`, `sequence`, `std_time_sec` | |
-
-### 1.3 Plant, Calendar & Capacity
-
-| Table | Purpose | Key columns | Notes |
-|-------|---------|-------------|-------|
-| `master.production_line` | Line | `plant_id`, `code`, `name`, `tonnage`, `sort_order`, `calendar_id` | `calendar_id` nullable → plant default |
-| `master.machine` | Machine | `plant_id`, `production_line_id`, `code`, `name`, `machine_type`, `rated_capacity`, `calendar_id` | Override line calendar if set |
-| `master.shift` | Shift template | `plant_id`, `code`, `name`, `start_time`, `end_time`, `break_minutes`, `crosses_midnight` | Template only |
-| `master.shift_assignment` | Shift instance | `plant_id`, `shift_id`, `production_line_id` nullable, `machine_id` nullable, `effective_from`, `effective_to`, `weekday_mask` | Exactly one resource scope or plant-wide |
-| `master.calendar` | Named calendar | `plant_id` nullable, `code`, `name`, `timezone` | |
-| `master.holiday` | Holiday | `calendar_id`, `holiday_date`, `name`, `is_paid` | Unique `(calendar_id, holiday_date)` |
-| `master.capacity` | Nominal capacity | `plant_id`, `production_line_id` **XOR** `machine_id`, `shift_id`, `jobs_per_day`, `hours_per_shift`, `effective_from`, `effective_to` | CHECK XOR |
-| `master.status_code` | Status lookup | `entity_type`, `code`, `name`, `sort_order`, `is_terminal` | [32](32_STATUS_STATE_MACHINE.md) |
-| `master.reason_code` | Reason codes | `code`, `category`, `name` | |
-| `master.file_type` | File kinds | `code`, `mime_pattern`, `max_size_mb` | |
-| `master.notification_template` | Templates | `code`, `channel`, `subject`, `body`, `locale` | |
-| `master.number_sequence` | Doc numbering | `plant_id`, `doc_type`, `prefix`, `next_value`, `pad_length`, `reset_rule` | [31](31_NUMBERING_STANDARD.md) |
+| Symbol | Meaning |
+|--------|---------|
+| PK | Primary key |
+| FK | Foreign key (see [38](38_FOREIGN_KEYS.md)) |
+| UK | Unique / partial unique |
+| N | Nullable |
+| **A** | Full Audit\* |
+| `timestamptz` | Timestamp with time zone |
+| `numeric(18,6)` | Quantities / factors (adjust scale per seed if needed) |
 
 ---
 
-## 2. Schema: `txn` (Planning + Calendar inputs)
+## 1. Schema `master`
 
-| Table | Purpose | Key columns | Notes |
-|-------|---------|-------------|-------|
-| `txn.sales_order` | Order header | `plant_id`, `order_no`, `customer_id`, `order_date`, `status_code` | |
-| `txn.sales_order_line` | Order line | `sales_order_id`, `line_no`, `part_id`, `qty_ordered`, `qty_allocated`, `due_date`, `status_code` | Partial schedule via `qty_allocated` |
-| `txn.production_plan` | Plan header | `plant_id`, `plan_no`, `horizon_type`, `period_start`, `period_end`, `status_code` | |
-| `txn.production_plan_item` | Scheduled job | `production_plan_id`, `sales_order_line_id` nullable, `part_id`, `production_line_id`, `machine_id`, `shift_id`, `planned_date`, `planned_start_at`, `planned_end_at`, `qty`, `status_code`, `sort_order` | Header vs item status: [32](32_STATUS_STATE_MACHINE.md) |
-| `txn.plan_approval` | Approval event | `production_plan_id`, `action`, `comment`, `acted_by`, `acted_at` + Audit\* | Append-style events |
-| `txn.plan_release` | Release event | `production_plan_id`, `released_at`, `released_by`, `effective_from` + Audit\* | |
-| `txn.plan_amendment` | Post-release change | `production_plan_id`, `reason_code_id`, `status_code`, `summary` | Reserved; unlocks Phase 2 |
-| `txn.ot_window` | Approved OT | `plant_id`, `production_line_id` / `machine_id`, `start_at`, `end_at`, `status_code`, `reason_code_id` | Calendar Engine input |
-| `txn.machine_shutdown` | Shutdown block | `plant_id`, `machine_id`, `production_line_id` nullable, `start_at`, `end_at`, `reason_code_id`, `status_code` | Calendar Engine input |
+### 1.1 `master.plant` — **A**
 
-Status values are **codes** resolved via `master.status_code` (not free strings). Transition rules: [27_BUSINESS_FLOW.md](27_BUSINESS_FLOW.md), [32_STATUS_STATE_MACHINE.md](32_STATUS_STATE_MACHINE.md).
+| Column | Type | Notes |
+|--------|------|-------|
+| `code` | `text` | UK active; seed `SF1` |
+| `name` | `text` | |
+| `timezone` | `text` | IANA TZ, e.g. `Asia/Bangkok` |
+| `default_calendar_id` | `uuid` | N, FK → `calendar`; see circular rule |
+
+### 1.2 `master.department` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK → plant |
+| `parent_id` | `uuid` | N, FK → department |
+| `code` | `text` | UK `(plant_id, code)` active |
+| `name` | `text` | |
+
+### 1.3 `master.user_profile` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `auth_user_id` | `uuid` | UK NOT NULL → `auth.users` |
+| `employee_code` | `text` | UK active (optionally per plant) |
+| `display_name` | `text` | |
+| `email` | `text` | |
+| `department_id` | `uuid` | N, FK |
+| `default_plant_id` | `uuid` | N, FK → plant |
+| `locale` | `text` | default `en` |
+| `timezone` | `text` | N; fallback plant TZ |
+| `theme_pref` | `text` | `light`\|`dark`\|`auto` |
+| `font_scale` | `numeric(4,2)` | e.g. `1.00` |
+| `compact_mode` | `boolean` | default false |
+| `sidebar_collapsed` | `boolean` | default false |
+
+### 1.4 `master.role` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `code` | `text` | UK active; `admin`, `planner`, … |
+| `name` | `text` | |
+| `description` | `text` | N |
+
+### 1.5 `master.permission` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `code` | `text` | UK; `module.resource.action` |
+| `module` | `text` | |
+| `action` | `text` | |
+| `resource` | `text` | |
+| `description` | `text` | N |
+
+### 1.6 `master.role_permission` — **J**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `role_id` | `uuid` | FK |
+| `permission_id` | `uuid` | FK |
+| | | UK `(role_id, permission_id)` active |
+
+### 1.7 `master.user_role` — **J**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `user_id` | `uuid` | FK → user_profile |
+| `role_id` | `uuid` | FK |
+| `plant_id` | `uuid` | N, FK; NULL = all granted plants policy |
+| | | UK `(user_id, role_id, plant_id)` active (use sentinel if needed for NULL) |
+
+### 1.8 `master.uom` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `code` | `text` | UK; `EA`, `KG`, … |
+| `name` | `text` | |
+| `dimension` | `text` | `count`\|`mass`\|`length`\|`time`\|… |
+
+### 1.9 `master.uom_conversion` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `from_uom_id` | `uuid` | FK |
+| `to_uom_id` | `uuid` | FK |
+| `factor` | `numeric(18,8)` | multiply from→to; > 0 |
+| | | UK `(from_uom_id, to_uom_id)` active |
+
+### 1.10 `master.customer` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | N, FK |
+| `code` | `text` | UK `(plant_id, code)` or global UK |
+| `name` | `text` | |
+| `contact_json` | `jsonb` | N |
+
+### 1.11 `master.part` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK |
+| `customer_id` | `uuid` | N, FK |
+| `code` | `text` | UK `(plant_id, code)` active |
+| `name` | `text` | |
+| `revision` | `text` | N |
+| `uom_id` | `uuid` | FK → uom |
+
+### 1.12 `master.material` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK |
+| `code` | `text` | UK `(plant_id, code)` |
+| `name` | `text` | |
+| `uom_id` | `uuid` | FK |
+| `spec_json` | `jsonb` | N |
+
+### 1.13 `master.part_material` — **J** (+ optional `version` if treated as business)
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `part_id` | `uuid` | FK |
+| `material_id` | `uuid` | FK |
+| `qty_per` | `numeric(18,6)` | ≥ 0 |
+| `uom_id` | `uuid` | FK |
+| `sequence` | `integer` | default 1 |
+| | | UK `(part_id, material_id, sequence)` active |
+
+### 1.14 `master.process` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | N, FK |
+| `code` | `text` | UK |
+| `name` | `text` | |
+| `sequence_hint` | `integer` | N |
+
+### 1.15 `master.part_process` — **J**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `part_id` | `uuid` | FK |
+| `process_id` | `uuid` | FK |
+| `sequence` | `integer` | |
+| `std_time_sec` | `integer` | N |
+| | | UK `(part_id, sequence)` active |
+
+### 1.16 `master.calendar` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | N, FK |
+| `code` | `text` | UK `(plant_id, code)` |
+| `name` | `text` | |
+| `timezone` | `text` | IANA |
+
+### 1.17 `master.holiday` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `calendar_id` | `uuid` | FK |
+| `holiday_date` | `date` | |
+| `name` | `text` | |
+| `is_paid` | `boolean` | default true |
+| | | UK `(calendar_id, holiday_date)` active |
+
+### 1.18 `master.production_line` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK |
+| `code` | `text` | UK `(plant_id, code)`; `PL-110T`… |
+| `name` | `text` | |
+| `tonnage` | `integer` | |
+| `sort_order` | `integer` | |
+| `calendar_id` | `uuid` | N, FK → calendar |
+
+### 1.19 `master.machine` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK |
+| `production_line_id` | `uuid` | FK |
+| `code` | `text` | UK `(plant_id, code)` |
+| `name` | `text` | |
+| `machine_type` | `text` | N |
+| `rated_capacity` | `numeric(18,6)` | N |
+| `calendar_id` | `uuid` | N, FK |
+
+### 1.20 `master.shift` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK |
+| `code` | `text` | UK `(plant_id, code)` |
+| `name` | `text` | |
+| `start_time` | `time` | local civil time |
+| `end_time` | `time` | |
+| `break_minutes` | `integer` | default 0 |
+| `crosses_midnight` | `boolean` | default false |
+
+### 1.21 `master.shift_assignment` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK |
+| `shift_id` | `uuid` | FK |
+| `production_line_id` | `uuid` | N, FK |
+| `machine_id` | `uuid` | N, FK |
+| `effective_from` | `date` | |
+| `effective_to` | `date` | N |
+| `weekday_mask` | `smallint` | bitmask Mon–Sun (1=Mon …) |
+| | | CHECK not both line and machine |
+
+### 1.22 `master.capacity` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK |
+| `production_line_id` | `uuid` | N, FK |
+| `machine_id` | `uuid` | N, FK |
+| `shift_id` | `uuid` | FK |
+| `jobs_per_day` | `integer` | N |
+| `hours_per_shift` | `numeric(8,2)` | N |
+| `effective_from` | `date` | |
+| `effective_to` | `date` | N |
+| | | CHECK XOR line/machine |
+
+### 1.23 `master.status_code` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `entity_type` | `text` | e.g. `production_plan` |
+| `code` | `text` | |
+| `name` | `text` | |
+| `sort_order` | `integer` | |
+| `is_terminal` | `boolean` | default false |
+| | | UK `(entity_type, code)` active |
+
+### 1.24 `master.reason_code` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | N, FK |
+| `code` | `text` | UK |
+| `category` | `text` | e.g. `ot`, `shutdown`, `amendment` |
+| `name` | `text` | |
+
+### 1.25 `master.file_type` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `code` | `text` | UK |
+| `mime_pattern` | `text` | |
+| `max_size_mb` | `numeric(8,2)` | |
+
+### 1.26 `master.notification_template` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `code` | `text` | event code; UK `(code, channel, locale)` |
+| `channel` | `text` | `telegram`, … |
+| `subject` | `text` | N |
+| `body` | `text` | placeholders `{{…}}` |
+| `locale` | `text` | |
+
+### 1.27 `master.number_sequence` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK |
+| `doc_type` | `text` | `sales_order`, `production_plan`, … |
+| `prefix` | `text` | |
+| `next_value` | `bigint` | |
+| `pad_length` | `integer` | |
+| `reset_rule` | `text` | `never`\|`yearly`\|`monthly` |
+| `last_reset_at` | `timestamptz` | N |
+| | | UK `(plant_id, doc_type)` active |
 
 ---
 
-## 3. Schema: `history`
+## 2. Schema `txn`
 
-| Table | Purpose | Columns pattern |
-|-------|---------|-----------------|
-| `history.production_plan_history` | Plan header snapshots | `id`, `production_plan_id`, `version`, `change_type`, `before_json`, `after_json`, `changed_fields`, `changed_at`, `changed_by` |
-| `history.production_plan_item_history` | Item snapshots | same pattern on `production_plan_item_id` |
-| `history.entity_change` | Generic | `entity_type`, `entity_id`, plus snapshot fields |
+### 2.1 `txn.sales_order` — **A**
 
-History is append-only. `version` is the **live entity version after the change**. Multiple history rows may share analysis metadata but one primary row per successful mutation. See [16_HISTORY_STANDARD.md](16_HISTORY_STANDARD.md).
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK |
+| `order_no` | `text` | UK active |
+| `customer_id` | `uuid` | FK |
+| `order_date` | `date` | |
+| `status_code` | `text` | entity `sales_order` |
+| `remark` | `text` | N |
+
+### 2.2 `txn.sales_order_line` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `sales_order_id` | `uuid` | FK |
+| `line_no` | `integer` | UK `(sales_order_id, line_no)` |
+| `part_id` | `uuid` | FK |
+| `qty_ordered` | `numeric(18,6)` | ≥ 0 |
+| `qty_allocated` | `numeric(18,6)` | default 0 |
+| `due_date` | `date` | N |
+| `status_code` | `text` | entity `sales_order_line` |
+| `uom_id` | `uuid` | N, FK; default part UoM |
+
+### 2.3 `txn.production_plan` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK |
+| `plan_no` | `text` | UK active |
+| `horizon_type` | `text` | `daily`\|`weekly`\|`monthly` |
+| `period_start` | `date` | |
+| `period_end` | `date` | |
+| `status_code` | `text` | entity `production_plan` |
+| `title` | `text` | N |
+| `lease_owner_id` | `uuid` | N, FK user_profile |
+| `lease_expires_at` | `timestamptz` | N |
+
+### 2.4 `txn.production_plan_item` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `production_plan_id` | `uuid` | FK |
+| `sales_order_line_id` | `uuid` | N, FK |
+| `part_id` | `uuid` | FK |
+| `production_line_id` | `uuid` | FK |
+| `machine_id` | `uuid` | N, FK |
+| `shift_id` | `uuid` | N, FK |
+| `planned_date` | `date` | civil date in calendar TZ |
+| `planned_start_at` | `timestamptz` | |
+| `planned_end_at` | `timestamptz` | > start |
+| `qty` | `numeric(18,6)` | ≥ 0 |
+| `status_code` | `text` | entity `production_plan_item` |
+| `sort_order` | `integer` | default 0 |
+| `remark` | `text` | N |
+
+### 2.5 `txn.plan_approval` — **E**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `production_plan_id` | `uuid` | FK |
+| `action` | `text` | `submit`\|`approve`\|`reject` |
+| `comment` | `text` | N |
+| `acted_by` | `uuid` | FK user_profile |
+| `acted_at` | `timestamptz` | |
+
+### 2.6 `txn.plan_release` — **E**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `production_plan_id` | `uuid` | FK |
+| `released_by` | `uuid` | FK |
+| `released_at` | `timestamptz` | |
+| `effective_from` | `timestamptz` | |
+
+### 2.7 `txn.plan_amendment` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `production_plan_id` | `uuid` | FK |
+| `amendment_no` | `text` | UK active |
+| `reason_code_id` | `uuid` | N, FK |
+| `status_code` | `text` | entity `plan_amendment` |
+| `summary` | `text` | |
+| `payload_json` | `jsonb` | N; structured change set |
+
+### 2.8 `txn.ot_window` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK |
+| `production_line_id` | `uuid` | N, FK |
+| `machine_id` | `uuid` | N, FK |
+| `start_at` | `timestamptz` | |
+| `end_at` | `timestamptz` | > start |
+| `status_code` | `text` | entity `ot_window` |
+| `reason_code_id` | `uuid` | N, FK |
+| | | CHECK resource present (XOR preferred) |
+
+### 2.9 `txn.machine_shutdown` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `plant_id` | `uuid` | FK |
+| `machine_id` | `uuid` | FK |
+| `production_line_id` | `uuid` | N, FK |
+| `start_at` | `timestamptz` | |
+| `end_at` | `timestamptz` | > start |
+| `status_code` | `text` | entity `machine_shutdown` |
+| `reason_code_id` | `uuid` | N, FK |
 
 ---
 
-## 4. Schema: `log`
+## 3. Schema `history` — pattern **H**
 
-| Table | Purpose |
-|-------|---------|
-| `log.app_event` | Application events |
-| `log.security_event` | Authz / security |
-| `log.integration_event` | External calls |
+### 3.1 `history.production_plan_history`
 
-Append-only; no Audit\*. See [17_LOG_STANDARD.md](17_LOG_STANDARD.md).
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `production_plan_id` | `uuid` | FK |
+| `version` | `integer` | live version after change |
+| `change_type` | `text` | |
+| `before_json` | `jsonb` | N |
+| `after_json` | `jsonb` | N |
+| `changed_fields` | `text[]` | N |
+| `changed_at` | `timestamptz` | |
+| `changed_by` | `uuid` | FK user_profile |
 
----
+### 3.2 `history.production_plan_item_history`
 
-## 5. Schema: `config`
+Same as above with `production_plan_item_id`.
 
-| Table | Purpose | Key columns | Ownership |
-|-------|---------|-------------|-----------|
-| `config.system_setting` | System key/value | `key`, `value_json`, `module` | Platform |
-| `config.feature_flag` | Flags | `code`, `is_enabled`, `payload_json` | Platform |
-| `config.user_preference` | Extensible prefs | `user_id` → `user_profile.id`, `key`, `value_json` | Keys **not** duplicated on profile (theme/font/compact stay on profile) |
+### 3.3 `history.entity_change`
 
----
-
-## 6. Schema: `integration`
-
-| Table | Purpose | Key columns |
-|-------|---------|-------------|
-| `integration.connection` | External connection metadata | `code`, `system_type`, `config_json` (no secrets) |
-| `integration.sync_job` | Sync run | `connection_id`, `direction`, `status_code`, `cursor_json`, `started_at`, `finished_at` |
-| `integration.sync_job_item` | Per-record | `sync_job_id`, `external_key`, `status_code`, `payload_hash`, `error_message` |
-| `integration.id_map` | ID mapping | `connection_id`, `entity_type`, `internal_id`, `external_id` |
-| `integration.file_link` | Attachment metadata | `entity_type`, `entity_id`, `drive_file_id` nullable, `storage_path` nullable, `file_type_id`, `name` | Drive and/or Storage |
-| `integration.outbox` | Domain event outbox | `event_type`, `payload_json`, `status_code`, `available_at`, `attempts` | [34](34_DOMAIN_EVENTS.md) |
-| `integration.idempotency_key` | API idempotency | `key`, `user_id`, `route`, `request_hash`, `response_json`, `expires_at` | [08](08_API_STANDARD.md) |
-
----
-
-## 7. Schema: `dashboard`
-
-| Table | Purpose |
-|-------|---------|
-| `dashboard.layout` | Saved layout (`user_id`, optional `role_id`, `plant_id`) |
-| `dashboard.widget` | Widget instance (`layout_id`, `type`, position/size, `query_key`) |
-
-`query_key` must reference registered read-model queries — not ad-hoc SQL.
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `entity_type` | `text` | |
+| `entity_id` | `uuid` | |
+| `version` | `integer` | N |
+| `change_type` | `text` | |
+| `before_json` / `after_json` | `jsonb` | N |
+| `changed_fields` | `text[]` | N |
+| `changed_at` | `timestamptz` | |
+| `changed_by` | `uuid` | N, FK |
 
 ---
 
-## 8. Future Module Tables (reserved names — do not duplicate)
+## 4. Schema `log` — pattern **L**
 
-| Module | Reserved tables |
-|--------|-----------------|
-| Production | `txn.production_job`, `txn.production_job_event` |
-| Store | `txn.stock_balance`, `txn.stock_movement`, `txn.stock_valuation_event` |
-| OEE | `txn.oee_sample`, `txn.downtime_event` |
-| Quality | `txn.inspection`, `txn.ncr` |
-| Maintenance | `txn.maintenance_order` (feeds calendar via shutdown/maintenance windows) |
+### 4.1 `log.app_event`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `level` | `text` | `debug`\|`info`\|`warn`\|`error` |
+| `module` | `text` | |
+| `event_code` | `text` | |
+| `message` | `text` | |
+| `context_json` | `jsonb` | N |
+| `request_id` | `text` | N |
+| `user_id` | `uuid` | N, FK user_profile |
+| `plant_id` | `uuid` | N |
+| `created_at` | `timestamptz` | |
+
+### 4.2 `log.security_event`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `event_code` | `text` | |
+| `message` | `text` | |
+| `actor_user_id` | `uuid` | N |
+| `ip_address` | `inet` | N |
+| `context_json` | `jsonb` | N |
+| `created_at` | `timestamptz` | |
+
+### 4.3 `log.integration_event`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `connection_id` | `uuid` | N, FK |
+| `direction` | `text` | `in`\|`out` |
+| `status_code` | `text` | |
+| `latency_ms` | `integer` | N |
+| `message` | `text` | N |
+| `context_json` | `jsonb` | N |
+| `created_at` | `timestamptz` | |
 
 ---
 
-## 9. Preference Ownership (single home)
+## 5. Schema `config` — **A**
 
-| Preference | Home |
-|------------|------|
-| Theme, font scale, compact mode, sidebar collapsed | `master.user_profile` |
-| Extensible key/value UI prefs | `config.user_preference` |
-| Dashboard widget layouts | `dashboard.layout` / `widget` |
+### 5.1 `config.system_setting`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `key` | `text` | UK active |
+| `value_json` | `jsonb` | |
+| `module` | `text` | N |
+
+### 5.2 `config.feature_flag`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `code` | `text` | UK |
+| `is_enabled` | `boolean` | |
+| `payload_json` | `jsonb` | N |
+
+### 5.3 `config.user_preference`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `user_id` | `uuid` | FK user_profile |
+| `key` | `text` | |
+| `value_json` | `jsonb` | |
+| | | UK `(user_id, key)` active |
+
+---
+
+## 6. Schema `integration`
+
+### 6.1 `integration.connection` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `code` | `text` | UK |
+| `system_type` | `text` | `google_drive`\|`telegram`\|`sap`\|`openai` |
+| `plant_id` | `uuid` | N, FK |
+| `config_json` | `jsonb` | no secrets |
+
+### 6.2 `integration.sync_job` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `connection_id` | `uuid` | FK |
+| `direction` | `text` | |
+| `status_code` | `text` | entity `sync_job` |
+| `cursor_json` | `jsonb` | N |
+| `started_at` | `timestamptz` | N |
+| `finished_at` | `timestamptz` | N |
+
+### 6.3 `integration.sync_job_item` — **J** or minimal
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `sync_job_id` | `uuid` | FK |
+| `external_key` | `text` | |
+| `status_code` | `text` | |
+| `payload_hash` | `text` | N |
+| `error_message` | `text` | N |
+
+### 6.4 `integration.id_map` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `connection_id` | `uuid` | FK |
+| `entity_type` | `text` | |
+| `internal_id` | `uuid` | |
+| `external_id` | `text` | |
+| | | UK `(connection_id, entity_type, external_id)` |
+
+### 6.5 `integration.file_link` — **A**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `entity_type` | `text` | |
+| `entity_id` | `uuid` | |
+| `file_type_id` | `uuid` | FK |
+| `name` | `text` | |
+| `drive_file_id` | `text` | N |
+| `storage_path` | `text` | N |
+| `checksum` | `text` | N |
+
+### 6.6 `integration.outbox` — **L**-like + status
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `event_type` | `text` | |
+| `aggregate_type` | `text` | |
+| `aggregate_id` | `uuid` | |
+| `payload_json` | `jsonb` | |
+| `status_code` | `text` | `pending`\|`processing`\|`done`\|`error` |
+| `available_at` | `timestamptz` | default now() |
+| `attempts` | `integer` | default 0 |
+| `last_error` | `text` | N |
+| `created_at` | `timestamptz` | |
+| `processed_at` | `timestamptz` | N |
+
+### 6.7 `integration.idempotency_key`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | PK |
+| `key` | `text` | |
+| `user_id` | `uuid` | N, FK |
+| `route` | `text` | |
+| `request_hash` | `text` | |
+| `response_json` | `jsonb` | N |
+| `expires_at` | `timestamptz` | |
+| `created_at` | `timestamptz` | |
+| | | UK `(user_id, route, key)` |
+
+---
+
+## 7. Schema `dashboard` — **A**
+
+### 7.1 `dashboard.layout`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `user_id` | `uuid` | N, FK |
+| `role_id` | `uuid` | N, FK |
+| `plant_id` | `uuid` | N, FK |
+| `code` | `text` | |
+| `name` | `text` | |
+
+### 7.2 `dashboard.widget`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `layout_id` | `uuid` | FK; ON DELETE CASCADE |
+| `widget_type` | `text` | |
+| `query_key` | `text` | registered read-model key |
+| `pos_x` | `integer` | |
+| `pos_y` | `integer` | |
+| `width` | `integer` | |
+| `height` | `integer` | |
+| `config_json` | `jsonb` | N |
+
+---
+
+## 8. Reserved future tables (names locked)
+
+| Table | Purpose | Key columns (preview) |
+|-------|---------|----------------------|
+| `txn.production_job` | Execution of released item | `plant_id`, `job_no`, `production_plan_item_id`, `status_code` |
+| `txn.production_job_event` | Start/stop/scrap events | `production_job_id`, `event_type`, `event_at` |
+| `txn.stock_balance` | On-hand | `plant_id`, `material_id`/`part_id`, `qty`, `uom_id` |
+| `txn.stock_movement` | Movements | `movement_type`, `qty`, refs |
+| `txn.stock_valuation_event` | Valuation hooks | `method`, `amount`, `posted_at` |
+| `txn.oee_sample` | Time-series sample | `machine_id`, `sampled_at`, A/P/Q metrics |
+| `txn.downtime_event` | Downtime | `machine_id`, `start_at`, `end_at`, `reason_code_id` |
+| `txn.inspection` | QC | `production_job_id`, `result_code` |
+| `txn.ncr` | Non-conformance | `ncr_no`, `status_code` |
+| `txn.maintenance_order` | PM/CM | `machine_id`, `window_start`, `window_end` |
+
+Do not invent alternate names for these concepts.
+
+---
+
+## 9. Preference ownership
+
+| Preference | Table |
+|------------|-------|
+| Theme / font / compact / sidebar | `master.user_profile` |
+| Extensible keys | `config.user_preference` |
+| Dashboard grid | `dashboard.layout` / `widget` |
 
 ---
 
 ## Related Documents
 
 - [06_ER_DIAGRAM.md](06_ER_DIAGRAM.md)
-- [26_MASTER_DATA.md](26_MASTER_DATA.md)
-- [18_CALENDAR_ENGINE.md](18_CALENDAR_ENGINE.md)
-- [33_PLANT_ORG_STANDARD.md](33_PLANT_ORG_STANDARD.md)
-- [36_DOCUMENTATION_REVIEW.md](36_DOCUMENTATION_REVIEW.md)
+- [37_TABLE_RELATIONSHIPS.md](37_TABLE_RELATIONSHIPS.md)
+- [38_FOREIGN_KEYS.md](38_FOREIGN_KEYS.md)
+- [39_INDEX_STRATEGY.md](39_INDEX_STRATEGY.md)

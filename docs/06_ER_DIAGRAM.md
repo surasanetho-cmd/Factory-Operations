@@ -1,74 +1,142 @@
-# 06 — ER Diagram
+# 06 — ER Diagram (Complete)
 
 **Product:** Smart-Factory Manufacturing Platform  
-**Scope:** Plant, masters, calendar, authz, BOM, planning  
-**Columns:** Audit\* omitted for clarity — see [04](04_DATABASE_STANDARD.md) / [05](05_DATABASE_DICTIONARY.md)
+**Audit\* columns omitted** — see [04](04_DATABASE_STANDARD.md) / [05](05_DATABASE_DICTIONARY.md)  
+**Relationships matrix:** [37_TABLE_RELATIONSHIPS.md](37_TABLE_RELATIONSHIPS.md)
 
 ---
 
-## 1. Organization, Authz, Product
+## 1. Platform overview
+
+```mermaid
+flowchart TB
+  subgraph masterSchema [master]
+    Plant[plant]
+    Authz[user role permission]
+    Product[part material BOM]
+    Resources[line machine shift calendar]
+  end
+  subgraph txnSchema [txn]
+    Orders[sales_order]
+    Plans[production_plan]
+    CalIn[ot_window shutdown]
+  end
+  subgraph support [support]
+    History[history]
+    Log[log]
+    Config[config]
+    Integ[integration]
+    Dash[dashboard]
+  end
+  Plant --> Resources
+  Plant --> Orders
+  Plant --> Plans
+  Product --> Plans
+  Resources --> Plans
+  Resources --> CalIn
+  Plans --> History
+  Plans --> Integ
+```
+
+---
+
+## 2. Organization & RBAC
 
 ```mermaid
 erDiagram
-  PLANT ||--o{ DEPARTMENT : organizes
-  PLANT ||--o{ PRODUCTION_LINE : owns
-  PLANT ||--o{ USER_PROFILE : defaultPlant
-  DEPARTMENT ||--o{ DEPARTMENT : parent
+  PLANT ||--o{ DEPARTMENT : has
+  DEPARTMENT ||--o{ DEPARTMENT : parent_of
+  PLANT ||--o{ USER_PROFILE : default_for
   DEPARTMENT ||--o{ USER_PROFILE : employs
-
-  USER_PROFILE ||--o{ USER_ROLE : has
-  ROLE ||--o{ USER_ROLE : grants
+  USER_PROFILE ||--o{ USER_ROLE : assigned
+  ROLE ||--o{ USER_ROLE : granted_to
+  PLANT ||--o{ USER_ROLE : scopes
   ROLE ||--o{ ROLE_PERMISSION : includes
-  PERMISSION ||--o{ ROLE_PERMISSION : assigned
-
-  UOM ||--o{ PART : measures
-  UOM ||--o{ MATERIAL : measures
-  CUSTOMER ||--o{ PART : orders
-  PART ||--o{ PART_PROCESS : routed
-  PROCESS ||--o{ PART_PROCESS : step
-  PART ||--o{ PART_MATERIAL : bom
-  MATERIAL ||--o{ PART_MATERIAL : component
+  PERMISSION ||--o{ ROLE_PERMISSION : granted
 
   PLANT {
     uuid id PK
-    string code
-    string timezone
+    text code UK
+    text timezone
+    uuid default_calendar_id FK
   }
   USER_PROFILE {
     uuid id PK
     uuid auth_user_id UK
     uuid default_plant_id FK
   }
+  ROLE {
+    uuid id PK
+    text code UK
+  }
+  PERMISSION {
+    uuid id PK
+    text code UK
+  }
+```
+
+---
+
+## 3. Product masters (BOM + routing)
+
+```mermaid
+erDiagram
+  PLANT ||--o{ CUSTOMER : hosts
+  PLANT ||--o{ PART : owns
+  PLANT ||--o{ MATERIAL : owns
+  CUSTOMER ||--o{ PART : specifies
+  UOM ||--o{ PART : measures
+  UOM ||--o{ MATERIAL : measures
+  UOM ||--o{ UOM_CONVERSION : from
+  UOM ||--o{ UOM_CONVERSION : to
+  PART ||--o{ PART_MATERIAL : bom_parent
+  MATERIAL ||--o{ PART_MATERIAL : bom_child
+  UOM ||--o{ PART_MATERIAL : bom_uom
+  PART ||--o{ PART_PROCESS : routed
+  PROCESS ||--o{ PART_PROCESS : step
+
   PART_MATERIAL {
     uuid id PK
     uuid part_id FK
     uuid material_id FK
     numeric qty_per
   }
+  PART_PROCESS {
+    uuid id PK
+    uuid part_id FK
+    uuid process_id FK
+    int sequence
+  }
 ```
 
 ---
 
-## 2. Calendar, Line, Capacity
+## 4. Calendar, resources, capacity
 
 ```mermaid
 erDiagram
-  PLANT ||--o{ CALENDAR : has
+  PLANT ||--o{ CALENDAR : owns
+  PLANT ||--o{ PRODUCTION_LINE : owns
+  PLANT ||--o{ MACHINE : owns
   PLANT ||--o{ SHIFT : templates
-  CALENDAR ||--o{ HOLIDAY : defines
-  PRODUCTION_LINE }o--|| CALENDAR : optionalOverride
-  MACHINE }o--|| CALENDAR : optionalOverride
+  PLANT ||--o{ CAPACITY : rates
+  PLANT ||--o{ SHIFT_ASSIGNMENT : assigns
+
+  CALENDAR ||--o{ HOLIDAY : contains
+  CALENDAR ||--o{ PRODUCTION_LINE : overrides
+  CALENDAR ||--o{ MACHINE : overrides
   PRODUCTION_LINE ||--o{ MACHINE : contains
 
-  SHIFT ||--o{ SHIFT_ASSIGNMENT : applied
-  PRODUCTION_LINE ||--o{ SHIFT_ASSIGNMENT : scoped
-  MACHINE ||--o{ SHIFT_ASSIGNMENT : scoped
+  SHIFT ||--o{ SHIFT_ASSIGNMENT : applied_as
+  PRODUCTION_LINE ||--o{ SHIFT_ASSIGNMENT : scoped_line
+  MACHINE ||--o{ SHIFT_ASSIGNMENT : scoped_machine
 
-  PRODUCTION_LINE ||--o{ CAPACITY : lineCapacity
-  MACHINE ||--o{ CAPACITY : machineCapacity
-  SHIFT ||--o{ CAPACITY : window
+  SHIFT ||--o{ CAPACITY : for_shift
+  PRODUCTION_LINE ||--o{ CAPACITY : line_cap
+  MACHINE ||--o{ CAPACITY : machine_cap
 
-  PRODUCTION_LINE ||--o{ OT_WINDOW : overtime
+  PRODUCTION_LINE ||--o{ OT_WINDOW : ot
+  MACHINE ||--o{ OT_WINDOW : ot
   MACHINE ||--o{ MACHINE_SHUTDOWN : blocked
 
   CAPACITY {
@@ -76,82 +144,111 @@ erDiagram
     uuid production_line_id FK
     uuid machine_id FK
     uuid shift_id FK
-    int jobs_per_day
+  }
+  HOLIDAY {
+    uuid id PK
+    uuid calendar_id FK
+    date holiday_date
   }
 ```
 
-**Capacity rule:** exactly one of `production_line_id` or `machine_id` is set (XOR).
+**Rules**
 
-**Calendar resolution:** machine.calendar_id → line.calendar_id → plant.default_calendar_id.
+- Capacity: XOR `production_line_id` / `machine_id`
+- Calendar resolve: machine → line → `plant.default_calendar_id`
 
 ---
 
-## 3. Planning Transactions
+## 5. Planning transactions
 
 ```mermaid
 erDiagram
   PLANT ||--o{ SALES_ORDER : receives
   CUSTOMER ||--o{ SALES_ORDER : places
-  SALES_ORDER ||--o{ SALES_ORDER_LINE : contains
-  PART ||--o{ SALES_ORDER_LINE : requested
+  SALES_ORDER ||--o{ SALES_ORDER_LINE : lines
+  PART ||--o{ SALES_ORDER_LINE : ordered
 
   PLANT ||--o{ PRODUCTION_PLAN : plans
-  PRODUCTION_PLAN ||--o{ PRODUCTION_PLAN_ITEM : schedules
-  PRODUCTION_PLAN ||--o{ PLAN_APPROVAL : reviewed
-  PRODUCTION_PLAN ||--o{ PLAN_RELEASE : released
-  PRODUCTION_PLAN ||--o{ PLAN_AMENDMENT : amends
+  PRODUCTION_PLAN ||--o{ PRODUCTION_PLAN_ITEM : items
+  PRODUCTION_PLAN ||--o{ PLAN_APPROVAL : approvals
+  PRODUCTION_PLAN ||--o{ PLAN_RELEASE : releases
+  PRODUCTION_PLAN ||--o{ PLAN_AMENDMENT : amendments
 
-  SALES_ORDER_LINE ||--o{ PRODUCTION_PLAN_ITEM : fulfills
+  SALES_ORDER_LINE ||--o{ PRODUCTION_PLAN_ITEM : allocates
   PART ||--o{ PRODUCTION_PLAN_ITEM : makes
-  PRODUCTION_LINE ||--o{ PRODUCTION_PLAN_ITEM : runs_on
-  MACHINE ||--o{ PRODUCTION_PLAN_ITEM : assigned
-  SHIFT ||--o{ PRODUCTION_PLAN_ITEM : timed
-  STATUS_CODE ||--o{ PRODUCTION_PLAN : headerStatus
-  STATUS_CODE ||--o{ PRODUCTION_PLAN_ITEM : itemStatus
+  PRODUCTION_LINE ||--o{ PRODUCTION_PLAN_ITEM : runs
+  MACHINE ||--o{ PRODUCTION_PLAN_ITEM : runs
+  SHIFT ||--o{ PRODUCTION_PLAN_ITEM : on_shift
+
+  PRODUCTION_PLAN ||--o{ PRODUCTION_PLAN_HISTORY : audited
+  PRODUCTION_PLAN_ITEM ||--o{ PRODUCTION_PLAN_ITEM_HISTORY : audited
 
   PRODUCTION_PLAN {
     uuid id PK
-    string plan_no
-    string horizon_type
-    string status_code
+    text plan_no UK
+    text horizon_type
+    text status_code
     int version
   }
   PRODUCTION_PLAN_ITEM {
     uuid id PK
     uuid production_plan_id FK
+    timestamptz planned_start_at
+    timestamptz planned_end_at
     numeric qty
-    string status_code
-    int version
+    text status_code
   }
 ```
 
 ---
 
-## 4. History / Prefs / Dashboard
+## 6. Integration, config, dashboard
 
 ```mermaid
 erDiagram
-  PRODUCTION_PLAN ||--o{ PRODUCTION_PLAN_HISTORY : audited
-  PRODUCTION_PLAN_ITEM ||--o{ PRODUCTION_PLAN_ITEM_HISTORY : audited
-  USER_PROFILE ||--o{ USER_PREFERENCE : extensiblePrefs
-  USER_PROFILE ||--o{ DASHBOARD_LAYOUT : owns
-  DASHBOARD_LAYOUT ||--o{ DASHBOARD_WIDGET : contains
+  CONNECTION ||--o{ SYNC_JOB : runs
+  SYNC_JOB ||--o{ SYNC_JOB_ITEM : items
+  CONNECTION ||--o{ ID_MAP : maps
+  FILE_TYPE ||--o{ FILE_LINK : types
+  USER_PROFILE ||--o{ USER_PREFERENCE : prefs
+  USER_PROFILE ||--o{ DASHBOARD_LAYOUT : layouts
+  ROLE ||--o{ DASHBOARD_LAYOUT : role_layouts
+  PLANT ||--o{ DASHBOARD_LAYOUT : plant_layouts
+  DASHBOARD_LAYOUT ||--o{ DASHBOARD_WIDGET : widgets
+
+  OUTBOX {
+    uuid id PK
+    text event_type
+    text status_code
+    timestamptz available_at
+  }
+  IDEMPOTENCY_KEY {
+    uuid id PK
+    text key
+    text route
+  }
 ```
 
 ---
 
-## 5. Notes
+## 7. Cardinality notes
 
-1. Soft delete: FKs remain; queries filter `deleted_at IS NULL`.
-2. BOM is `part_material` — **not** a direct Part→Material one-to-many ownership edge.
-3. Calendar Engine inputs: holiday, shift_assignment, capacity, `ot_window`, `machine_shutdown`, maintenance (future).
-4. Column authority: [05_DATABASE_DICTIONARY.md](05_DATABASE_DICTIONARY.md).
+| Relationship | Cardinality |
+|--------------|-------------|
+| Plant → Lines | 1:N |
+| Line → Machines | 1:N |
+| Plan → Items | 1:N |
+| Order → Lines | 1:N |
+| Part → BOM rows | 1:N |
+| Part ↔ Material | N:M via `part_material` |
+| Role ↔ Permission | N:M via `role_permission` |
+| User ↔ Role | N:M via `user_role` |
+| Layout → Widgets | 1:N (CASCADE) |
 
 ---
 
 ## Related Documents
 
-- [04_DATABASE_STANDARD.md](04_DATABASE_STANDARD.md)
 - [05_DATABASE_DICTIONARY.md](05_DATABASE_DICTIONARY.md)
-- [18_CALENDAR_ENGINE.md](18_CALENDAR_ENGINE.md)
-- [33_PLANT_ORG_STANDARD.md](33_PLANT_ORG_STANDARD.md)
+- [37_TABLE_RELATIONSHIPS.md](37_TABLE_RELATIONSHIPS.md)
+- [38_FOREIGN_KEYS.md](38_FOREIGN_KEYS.md)
