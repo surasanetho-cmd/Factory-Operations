@@ -65,7 +65,7 @@ export function AppShell({
         }
         .sidebar {
           background: linear-gradient(180deg, #15202b 0%, var(--bg-sidebar) 100%);
-          border-right: 1px solid var(--border);
+          border-right: 1px solid var(--app-border);
           padding: 1.25rem 1rem;
           display: flex;
           flex-direction: column;
@@ -75,7 +75,7 @@ export function AppShell({
           display: grid;
           gap: 0.2rem;
           padding: 0.25rem 0.5rem 0.75rem;
-          border-bottom: 1px solid var(--border);
+          border-bottom: 1px solid var(--app-border);
         }
         .brand strong {
           font-size: 1.05rem;
@@ -100,7 +100,7 @@ export function AppShell({
           align-items: center;
           gap: 1rem;
           padding: 1rem 1.5rem;
-          border-bottom: 1px solid var(--border);
+          border-bottom: 1px solid var(--app-border);
           background: rgba(18, 24, 31, 0.72);
           backdrop-filter: blur(8px);
         }
@@ -113,7 +113,7 @@ export function AppShell({
         }
         .signout {
           background: transparent;
-          border: 1px solid var(--border);
+          border: 1px solid var(--app-border);
           color: var(--text);
           border-radius: 8px;
           padding: 0.45rem 0.8rem;
@@ -128,7 +128,7 @@ export function AppShell({
           }
           .sidebar {
             border-right: 0;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--app-border);
           }
         }
       `}</style>

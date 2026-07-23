@@ -34,7 +34,7 @@ function Card({ title, value }: { title: string; value: string }) {
     <div
       style={{
         background: "var(--bg-elevated)",
-        border: "1px solid var(--border)",
+        border: "1px solid var(--app-border)",
         borderRadius: 12,
         padding: "1rem 1.1rem",
       }}

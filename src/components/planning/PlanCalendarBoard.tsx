@@ -119,7 +119,7 @@ export function PlanCalendarBoard({
           {pending ? "Refreshing…" : message}
         </span>
       </div>
-      <div style={{ overflow: "auto", border: "1px solid var(--border)", borderRadius: 12 }}>
+      <div style={{ overflow: "auto", border: "1px solid var(--app-border)", borderRadius: 12 }}>
         <table style={{ borderCollapse: "collapse", minWidth: 900, width: "100%" }}>
           <thead>
             <tr style={{ background: "var(--bg-elevated)" }}>
@@ -189,7 +189,7 @@ function fmtTime(iso: string) {
 const th: React.CSSProperties = {
   textAlign: "left",
   padding: "0.65rem 0.75rem",
-  borderBottom: "1px solid var(--border)",
+  borderBottom: "1px solid var(--app-border)",
   color: "var(--text-muted)",
   fontSize: 12,
   position: "sticky",
@@ -197,6 +197,6 @@ const th: React.CSSProperties = {
 };
 const td: React.CSSProperties = {
   padding: "0.5rem",
-  borderBottom: "1px solid var(--border)",
-  borderRight: "1px solid var(--border)",
+  borderBottom: "1px solid var(--app-border)",
+  borderRight: "1px solid var(--app-border)",
 };

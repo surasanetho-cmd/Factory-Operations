@@ -48,7 +48,7 @@ export default async function PlanLayout({
         style={{
           display: "flex",
           gap: "0.35rem",
-          borderBottom: "1px solid var(--border)",
+          borderBottom: "1px solid var(--app-border)",
           marginBottom: "1.25rem",
           flexWrap: "wrap",
         }}

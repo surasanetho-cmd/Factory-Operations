@@ -28,7 +28,7 @@ export default async function PlansPage() {
         </div>
       </div>
       <div style={{ marginTop: "1rem" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid var(--app-border)", borderRadius: 12, overflow: "hidden" }}>
           <thead>
             <tr style={{ background: "var(--bg-elevated)" }}>
               {["Plan No", "Title", "Horizon", "Period", "Status", ""].map((h) => (
@@ -51,7 +51,7 @@ export default async function PlansPage() {
                   <StatusPill status={p.status_code} />
                 </td>
                 <td style={td}>
-                  <Link href={`/planning/plans/${p.id}`} style={{ color: "var(--accent)" }}>
+                  <Link href={`/planning/plans/${p.id}`} style={{ color: "var(--app-accent)" }}>
                     Open
                   </Link>
                 </td>
@@ -73,7 +73,7 @@ export default async function PlansPage() {
 
 const td: React.CSSProperties = {
   padding: "0.7rem 1rem",
-  borderBottom: "1px solid var(--border)",
+  borderBottom: "1px solid var(--app-border)",
   fontSize: 14,
 };
 

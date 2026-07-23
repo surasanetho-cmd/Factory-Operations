@@ -18,7 +18,7 @@ export default async function ApprovalsInboxPage() {
       <p style={{ color: "var(--text-muted)" }}>
         Inbox for submit / approve / release actions
       </p>
-      <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid var(--app-border)", borderRadius: 12, overflow: "hidden" }}>
         <thead>
           <tr style={{ background: "var(--bg-elevated)" }}>
             {["Plan", "Period", "Status", ""].map((h) => (
@@ -48,7 +48,7 @@ export default async function ApprovalsInboxPage() {
                       ? `/planning/plans/${p.id}/release`
                       : `/planning/plans/${p.id}/approve`
                   }
-                  style={{ color: "var(--accent)" }}
+                  style={{ color: "var(--app-accent)" }}
                 >
                   Review
                 </Link>
@@ -70,6 +70,6 @@ export default async function ApprovalsInboxPage() {
 
 const td: React.CSSProperties = {
   padding: "0.7rem 1rem",
-  borderBottom: "1px solid var(--border)",
+  borderBottom: "1px solid var(--app-border)",
   fontSize: 14,
 };

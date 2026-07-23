@@ -63,7 +63,7 @@ export function WorkflowActions({
             rows={3}
             style={{
               background: "var(--bg)",
-              border: "1px solid var(--border)",
+              border: "1px solid var(--app-border)",
               borderRadius: 8,
               color: "var(--text)",
               padding: "0.65rem 0.75rem",
@@ -79,7 +79,7 @@ export function WorkflowActions({
             disabled={!a.enabled || pending}
             onClick={() => void run(a.action)}
             style={{
-              background: a.action === "reject" ? "transparent" : "var(--accent)",
+              background: a.action === "reject" ? "transparent" : "var(--app-accent)",
               color: a.action === "reject" ? "var(--danger)" : "#fff",
               border: a.action === "reject" ? "1px solid var(--danger)" : "0",
               borderRadius: 8,

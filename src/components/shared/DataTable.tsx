@@ -10,7 +10,7 @@ export function DataTable({
       style={{
         marginTop: "1rem",
         overflow: "auto",
-        border: "1px solid var(--border)",
+        border: "1px solid var(--app-border)",
         borderRadius: 12,
       }}
     >
@@ -24,7 +24,7 @@ export function DataTable({
                   textAlign: "left",
                   padding: "0.75rem 1rem",
                   background: "var(--bg-elevated)",
-                  borderBottom: "1px solid var(--border)",
+                  borderBottom: "1px solid var(--app-border)",
                   color: "var(--text-muted)",
                   fontSize: 13,
                   fontWeight: 600,
@@ -53,7 +53,7 @@ export function DataTable({
                     key={j}
                     style={{
                       padding: "0.7rem 1rem",
-                      borderBottom: "1px solid var(--border)",
+                      borderBottom: "1px solid var(--app-border)",
                       fontSize: 14,
                     }}
                   >

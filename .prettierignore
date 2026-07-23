@@ -1,0 +1,11 @@
+.next
+node_modules
+out
+build
+coverage
+package-lock.json
+supabase
+knowledge
+docs
+.docs
+*.min.js

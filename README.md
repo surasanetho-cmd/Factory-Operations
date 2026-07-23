@@ -35,13 +35,30 @@ Living board: [`STATUS.md`](STATUS.md)
 | Modules | `knowledge/60_Module/` |
 | ADR | `knowledge/99_ADR/` |
 
-## App
+## App stack
+
+- **Next.js** (App Router) + **TypeScript**
+- **Tailwind CSS** v4
+- **ESLint** + **Prettier**
+- **shadcn/ui** (Radix)
+- **Supabase** JS client (`@supabase/supabase-js` + `@supabase/ssr`)
+- **Supabase Auth** (browser + server clients, middleware session refresh)
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env.local   # set NEXT_PUBLIC_SUPABASE_URL + ANON_KEY
 npm install
 npm run dev
 ```
+
+| Script | Purpose |
+|--------|---------|
+| `npm run dev` | Local development |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint |
+| `npm run format` | Prettier write |
+
+Auth entry: `/login` · protected shell under `src/app/(shell)/`  
+Clients: `src/lib/supabase/{client,server,middleware}.ts`
 
 ## Database
 

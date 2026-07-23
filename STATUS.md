@@ -12,6 +12,7 @@
 | Foundation (constitution, knowledge, prompts, templates) | ✅ Done |
 | Database Design (dictionary, ER, masters, migrations) | ✅ Done |
 | Login / Auth / Menu / RBAC | ✅ Done |
+| Next.js scaffold (TS, Tailwind, ESLint, Prettier, shadcn, Supabase Auth) | ✅ Done |
 | Planning Module (header, detail, calendar, capacity, drag-drop, approve, release) | ✅ Done |
 | Dashboard (home session shell) | 🟡 Basic |
 | Store | ⬜ Reserved |

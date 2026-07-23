@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
   const router = useRouter();
@@ -29,64 +32,34 @@ export function LoginForm() {
     router.refresh();
   }
 
-  const field: React.CSSProperties = {
-    display: "grid",
-    gap: "0.35rem",
-    fontSize: "0.9rem",
-    color: "var(--text-muted)",
-  };
-  const input: React.CSSProperties = {
-    background: "var(--bg)",
-    border: "1px solid var(--border)",
-    borderRadius: 8,
-    padding: "0.7rem 0.85rem",
-    color: "var(--text)",
-  };
-
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: "1rem" }}>
-      <label style={field}>
-        Email
-        <input
-          style={input}
+    <form onSubmit={onSubmit} className="grid gap-4">
+      <div className="grid gap-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
           type="email"
           autoComplete="username"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-      </label>
-      <label style={field}>
-        Password
-        <input
-          style={input}
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
           type="password"
           autoComplete="current-password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-      </label>
-      {error ? (
-        <p style={{ color: "var(--danger)", margin: 0, fontSize: "0.9rem" }}>{error}</p>
-      ) : null}
-      <button
-        type="submit"
-        disabled={loading}
-        style={{
-          marginTop: "0.5rem",
-          background: "var(--accent)",
-          color: "white",
-          border: 0,
-          borderRadius: 8,
-          padding: "0.75rem 1rem",
-          fontWeight: 600,
-          cursor: loading ? "wait" : "pointer",
-          opacity: loading ? 0.7 : 1,
-        }}
-      >
+      </div>
+      {error ? <p className="text-sm text-[var(--danger)] m-0">{error}</p> : null}
+      <Button type="submit" disabled={loading} className="mt-1 w-full">
         {loading ? "Signing in…" : "Sign in"}
-      </button>
+      </Button>
     </form>
   );
 }
