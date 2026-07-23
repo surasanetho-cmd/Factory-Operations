@@ -16,4 +16,5 @@ Agent / workspace notes for Factory Operations.
 | Supabase | `knowledge/50_Integration/SUPABASE.md` |
 | Agent prompts | `prompts/README.md` |
 | Templates | `templates/README.md` |
+| Status board | `STATUS.md` |
 | Cursor rules (legacy) | `docs/00-governance/23_CURSOR_RULES.md` |

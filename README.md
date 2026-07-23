@@ -14,6 +14,10 @@ Manufacturing platform (Production Planning first).
 └── supabase/        # migrations
 ```
 
+## Status
+
+Living board: [`STATUS.md`](STATUS.md)
+
 ## Knowledge
 
 **Start:** [`knowledge/README.md`](knowledge/README.md)  

@@ -31,6 +31,7 @@ manufacturing-platform/
 | [PROJECT_VISION.md](00_Governance/PROJECT_VISION.md) | Vision & goals |
 | [ROADMAP.md](00_Governance/ROADMAP.md) | Phased roadmap |
 | [CHANGELOG.md](00_Governance/CHANGELOG.md) | Change log |
+| [STATUS.md](00_Governance/STATUS.md) | Pointer to repo status board |
 
 ## 10 — Business
 
