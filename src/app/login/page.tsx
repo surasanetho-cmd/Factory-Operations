@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { createClient } from "@/lib/supabase/server";
+import { getSupabaseEnvStatus } from "@/lib/supabase/env";
 import {
   Card,
   CardContent,
@@ -10,11 +11,15 @@ import {
 } from "@/components/ui/card";
 
 export default async function LoginPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (user) redirect("/dashboard");
+  const config = getSupabaseEnvStatus({ server: true });
+
+  if (config.configured) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) redirect("/dashboard");
+  }
 
   return (
     <div className="grid min-h-screen place-items-center p-6">
@@ -26,7 +31,16 @@ export default async function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <LoginForm />
+          {!config.configured ? (
+            <p className="text-sm text-[var(--danger)] m-0">
+              Supabase env is missing on this deployment. Set{" "}
+              <code>NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
+              <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> on Vercel (Production + Preview), then{" "}
+              <strong>Redeploy</strong>.
+            </p>
+          ) : (
+            <LoginForm />
+          )}
         </CardContent>
       </Card>
     </div>

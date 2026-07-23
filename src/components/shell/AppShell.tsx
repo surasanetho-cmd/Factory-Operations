@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { usePathname } from "next/navigation";
+import { signOut } from "@/lib/auth/actions";
 import { buildMenuTree, type MenuItem, type SessionContext } from "@/lib/auth/types";
 
 export function AppShell({
@@ -13,16 +13,8 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const tree = buildMenuTree(context.menus ?? []);
   const roots = tree.get(null) ?? [];
-
-  async function signOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.replace("/login");
-    router.refresh();
-  }
 
   return (
     <div className="shell">
@@ -51,9 +43,11 @@ export function AppShell({
               {context.profile?.email}
             </div>
           </div>
-          <button type="button" onClick={signOut} className="signout">
-            Sign out
-          </button>
+          <form action={signOut}>
+            <button type="submit" className="signout">
+              Sign out
+            </button>
+          </form>
         </header>
         <main className="content">{children}</main>
       </div>

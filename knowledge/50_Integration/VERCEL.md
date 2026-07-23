@@ -80,10 +80,21 @@ Ensure Preview env vars include the same Supabase keys unless you use a separate
 
 | Symptom | Fix |
 |---------|-----|
-| Login page loads but sign-in fails | Check env vars on Vercel; redeploy after adding them |
+| **Failed to fetch** on login | Env vars missing or deploy ran **before** env was added → set vars on Vercel → **Redeploy** |
+| Login page says env missing | Add `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` for **Production** and **Preview** |
 | Redirect loop | Supabase redirect URLs missing `https://*.vercel.app/**` |
 | Build fails | Run `npm run build` locally; check Node 20+ on Vercel |
 | 500 on protected routes | Confirm anon key is set; check Vercel **Runtime Logs** |
+
+**Health check (after deploy):**
+
+```text
+https://factory-operations.vercel.app/api/health/supabase
+```
+
+Expected: `{ "ok": true, "configured": true, "authHealth": 200 }`
+
+If `configured: false` → add env vars and **Redeploy** (required — Next.js bakes `NEXT_PUBLIC_*` at build time).
 
 Local check:
 
