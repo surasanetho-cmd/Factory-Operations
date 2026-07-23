@@ -1,45 +1,40 @@
-# Smart-Factory
+# Factory Operations
 
-Enterprise **Manufacturing Platform** (Production Planning first).
+Manufacturing platform (Production Planning first) — docs + Supabase SQL + Auth shell.
 
-This repository is in a **documentation-first** phase. Application source code has not been generated yet.
+## Docs
 
-## Documentation
+[`/docs`](docs/README.md) — standards and database design.
 
-Source of truth: [`/docs`](docs/README.md)
+## Database
 
-```text
-docs/
-├── 00-governance/      ← Constitution, Standards, Decisions
-├── 10-business/        ← Business Flow, Requirements
-├── 20-architecture/    ← System, Modules, Integrations
-├── 30-database/        ← ERD, Data Dictionary, Standards
-├── 40-uiux/            ← Design System, Screen Flow
-├── 50-development/     ← Coding, API, Folder Structure
-├── 60-deployment/      ← MCP, Vercel, GitHub, Environment
-└── 99-changelog/       ← Change Log, ADR
+Supabase project **Factory-Operations** (`ilkzavjrjwjebcyitgaj`)
+
+Migrations: [`supabase/migrations/`](supabase/migrations/)  
+Tracker: [50_SQL_MODULE_DELIVERY.md](docs/30-database/50_SQL_MODULE_DELIVERY.md)  
+Auth: [51_AUTH_MODULE_DELIVERY.md](docs/30-database/51_AUTH_MODULE_DELIVERY.md)
+
+| Module | Status |
+|--------|--------|
+| PLATFORM | Applied |
+| CALENDAR & RESOURCES | Applied |
+| PRODUCT | Applied |
+| AUTH / MENU (Phase 5) | Applied + app |
+
+## App (Phase 5 Authentication)
+
+```bash
+cp .env.example .env.local   # fill Supabase URL + anon key
+npm install
+npm run dev
 ```
 
-Full catalog: [docs/README.md](docs/README.md)
+| Feature | Route |
+|---------|-------|
+| Login | `/login` |
+| Roles | `/settings/roles` |
+| Permissions | `/settings/permissions` |
+| Menus | `/settings/menus` |
+| Users | `/settings/users` |
 
-### Quick links
-
-| Area | Start here |
-|------|------------|
-| Constitution | [00_PROJECT_CONSTITUTION.md](docs/00-governance/00_PROJECT_CONSTITUTION.md) |
-| Vision | [01_PROJECT_VISION.md](docs/10-business/01_PROJECT_VISION.md) |
-| Architecture | [02_SYSTEM_ARCHITECTURE.md](docs/20-architecture/02_SYSTEM_ARCHITECTURE.md) |
-| **DB architecture (review)** | [40_DATABASE_ARCHITECTURE.md](docs/30-database/40_DATABASE_ARCHITECTURE.md) |
-| Data dictionary | [05_DATABASE_DICTIONARY.md](docs/30-database/05_DATABASE_DICTIONARY.md) |
-| Cursor rules | [23_CURSOR_RULES.md](docs/00-governance/23_CURSOR_RULES.md) |
-| Changelog / ADR | [30_CHANGELOG.md](docs/99-changelog/30_CHANGELOG.md) · [29_DECISION_LOG.md](docs/99-changelog/29_DECISION_LOG.md) |
-
-## Current Phase
-
-**Production Planning** — database architecture documented; **Module 1 (PLATFORM) SQL** delivered.
-
-SQL: [`supabase/migrations/`](supabase/migrations/) · [Module delivery](docs/30-database/50_SQL_MODULE_DELIVERY.md)
-
-## Next Step
-
-Review Module 1 SQL, then approve **Module 2: Calendar & Resources**.
+Sidebar is driven by `master.menu` + RBAC.

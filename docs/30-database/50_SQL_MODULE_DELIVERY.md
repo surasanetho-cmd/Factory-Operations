@@ -12,6 +12,7 @@
 | 1 | **PLATFORM** | Applied to remote `Factory-Operations` (`ilkzavjrjwjebcyitgaj`, `ap-south-1`) | `platform_01` … `platform_09` |
 | 2 | **CALENDAR & RESOURCES** | Applied to remote `Factory-Operations` (`ilkzavjrjwjebcyitgaj`, `ap-south-1`) | `calendar_01` … `calendar_09` |
 | 3 | **PRODUCT** | Applied to remote `Factory-Operations` (`ilkzavjrjwjebcyitgaj`, `ap-south-1`) | `product_01` … `product_06` |
+| 3b | **AUTH / MENU (Phase 5)** | Applied + app shell | `auth_01` … `auth_05` — see [51_AUTH_MODULE_DELIVERY.md](51_AUTH_MODULE_DELIVERY.md) |
 | 4 | PLANNING (txn) | Pending | sales_order, production_plan*, approvals, history |
 | 5 | INTEGRATION / LOG / DASHBOARD | Pending | outbox, sync, file_link, logs, layouts |
 | 6+ | Production / Store / OEE / … | Later | reserved tables |
