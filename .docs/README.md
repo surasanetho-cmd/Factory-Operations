@@ -14,4 +14,5 @@ Agent / workspace notes for Factory Operations.
 | Migration plan | `knowledge/20_Database/MIGRATION_PLAN.md` |
 | Planning module | `knowledge/60_Module/PLANNING.md` |
 | Supabase | `knowledge/50_Integration/SUPABASE.md` |
+| Agent prompts | `prompts/README.md` |
 | Cursor rules (legacy) | `docs/00-governance/23_CURSOR_RULES.md` |

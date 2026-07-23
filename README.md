@@ -16,7 +16,8 @@ Manufacturing platform (Production Planning first).
 
 ## Knowledge
 
-**Start:** [`knowledge/README.md`](knowledge/README.md)
+**Start:** [`knowledge/README.md`](knowledge/README.md)  
+**Agent prompts:** [`prompts/README.md`](prompts/README.md)
 
 | Area | Path |
 |------|------|
