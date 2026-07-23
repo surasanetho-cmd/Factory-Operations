@@ -11,90 +11,80 @@
 |---|--------|--------|------------|
 | 1 | **PLATFORM** | Applied to remote `Factory-Operations` (`ilkzavjrjwjebcyitgaj`, `ap-south-1`) | `platform_01` … `platform_09` |
 | 2 | **CALENDAR & RESOURCES** | Applied to remote `Factory-Operations` (`ilkzavjrjwjebcyitgaj`, `ap-south-1`) | `calendar_01` … `calendar_09` |
-| 3 | PRODUCT | Pending | customer, part, material, BOM, process |
+| 3 | **PRODUCT** | Applied to remote `Factory-Operations` (`ilkzavjrjwjebcyitgaj`, `ap-south-1`) | `product_01` … `product_06` |
 | 4 | PLANNING (txn) | Pending | sales_order, production_plan*, approvals, history |
 | 5 | INTEGRATION / LOG / DASHBOARD | Pending | outbox, sync, file_link, logs, layouts |
 | 6+ | Production / Store / OEE / … | Later | reserved tables |
 
 ---
 
-## Module 1 — PLATFORM
+## Master coverage (requested)
 
-### Includes
+| Master | Table | Module |
+|--------|-------|--------|
+| User | `master.user_profile` | 1 |
+| Role | `master.role` | 1 |
+| Permission | `master.permission` | 1 |
+| Line | `master.production_line` | 2 |
+| Machine | `master.machine` | 2 |
+| Shift | `master.shift` | 2 |
+| Calendar | `master.calendar` | 2 |
+| Holiday | `master.holiday` | 2 |
+| Customer | `master.customer` | 3 |
+| Part | `master.part` | 3 |
+| Process | `master.process` | 3 |
 
-| Area | Objects |
-|------|---------|
-| Schemas | `master`, `txn`, `history`, `log`, `config`, `integration`, `dashboard`, `authz` |
-| Tables | `plant`, `department`, `user_profile`, `role`, `permission`, `role_permission`, `user_role`, `uom`, `uom_conversion`, `status_code`, `reason_code`, `file_type`, `notification_template`, `number_sequence`, `config.system_setting`, `config.feature_flag`, `config.user_preference` |
-| Functions | `master.set_updated_at`, `master.soft_delete_row`, `master.next_document_no`, `authz.*` |
-| Triggers | `trg_*_set_updated_at` on mutable tables |
-| Views | `master.v_*_active`, `config.v_feature_flag_active` |
-| Seed | Plant `SF1`, departments, roles, permissions, matrix, UoM, statuses, reasons, file types, templates, sequences, feature flags, settings |
-| RLS | Enabled + baseline policies |
-
-### Migration files
-
-```text
-supabase/migrations/
-  20260723003927_platform_01_schemas_extensions.sql
-  20260723003928_platform_02_audit_helpers.sql
-  20260723003929_platform_03_master_org_rbac.sql
-  20260723003932_platform_04_master_lookups.sql
-  20260723003933_platform_05_config.sql
-  20260723003934_platform_06_authz_functions_rls.sql
-  20260723003935_platform_07_views.sql
-  20260723003936_platform_08_seed.sql
-  20260723003937_platform_09_grants.sql
-```
+Also in Module 3: `material`, `part_material` (BOM), `part_process` (routing).
 
 ---
 
-## Module 2 — CALENDAR & RESOURCES (this delivery)
+## Module 1 — PLATFORM
+
+See prior section / migrations `platform_01` … `platform_09`.
+
+---
+
+## Module 2 — CALENDAR & RESOURCES
+
+See prior section / migrations `calendar_01` … `calendar_09`.
+
+---
+
+## Module 3 — PRODUCT (this delivery)
 
 ### Includes
 
 | Area | Objects |
 |------|---------|
-| Tables (`master`) | `calendar`, `holiday`, `production_line`, `machine`, `shift`, `shift_assignment`, `capacity` |
-| Tables (`txn`) | `ot_window`, `machine_shutdown` |
-| FK | `plant.default_calendar_id` → `calendar.id` |
-| Functions | `master.resolve_calendar_id`, `master.is_holiday`, `master.is_working_day`, `master.weekday_bit`, `master.get_capacity_for_date` |
-| RPCs | `public.engine_calendar_resolve_calendar`, `engine_calendar_is_working_day`, `engine_calendar_get_capacity` |
-| Triggers | `trg_*_set_updated_at` on all new mutable tables |
-| Views | `master.v_calendar_active`, `v_holiday_active`, `v_production_line_active`, `v_machine_active`, `v_shift_active`, `v_capacity_active`, `txn.v_ot_window_active`, `txn.v_machine_shutdown_active` |
-| Seed | Calendar `SF1-STD`, holidays 2026–2027, lines `PL-110T`…`PL-3200T`, machines `*-01`, shifts `DAY`/`NIGHT`, assignments Mon–Fri, capacity 25 jobs / 8h, permissions |
-| RLS | Plant-scoped select + manage policies |
+| Tables | `customer`, `part`, `material`, `process`, `part_material`, `part_process` |
+| Views | `v_customer_active`, `v_part_active`, `v_material_active`, `v_process_active`, `v_part_bom_active`, `v_part_routing_active` |
+| Seed | `CUST-DEMO`, `PART-001/002`, `MAT-STEEL/RESIN`, `PRESS/DEBURR/INSPECT`, sample BOM + routing |
+| RLS | Plant-scoped select + manage permissions |
 
 ### Migration files
 
 ```text
 supabase/migrations/
-  20260723020920_calendar_01_master_calendar_holiday.sql
-  20260723020921_calendar_02_master_line_machine.sql
-  20260723020922_calendar_03_master_shift_capacity.sql
-  20260723020923_calendar_04_txn_ot_shutdown.sql
-  20260723020924_calendar_05_engine_functions.sql
-  20260723020925_calendar_06_views.sql
-  20260723020926_calendar_07_rls.sql
-  20260723020927_calendar_08_seed.sql
-  20260723020928_calendar_09_grants.sql
+  20260723024631_product_01_customer_part_material.sql
+  20260723024632_product_02_process_bom_routing.sql
+  20260723024633_product_03_views.sql
+  20260723024634_product_04_rls.sql
+  20260723024635_product_05_seed.sql
+  20260723024636_product_06_grants.sql
 ```
 
-### Not in Module 2
+### Not in Module 3
 
-- Customer / part / material / BOM / process  
 - Planning transactions (`sales_order`, `production_plan*`)  
-- Full Calendar Engine window/timeline service (SQL helpers only)  
 - History / outbox / dashboard tables  
 
 ---
 
-## Review checklist (Module 2)
+## Review checklist (Module 3)
 
-- [ ] Calendar resolution order matches [18_CALENDAR_ENGINE.md](../20-architecture/18_CALENDAR_ENGINE.md)  
-- [ ] Line XOR machine CHECKs on capacity / OT  
-- [ ] Seed lines 110T–3200T and shifts acceptable  
-- [ ] Approve to apply to remote Supabase, then proceed with **Module 3: PRODUCT**
+- [ ] Customer / part / process columns match dictionary  
+- [ ] BOM XOR routing seed acceptable  
+- [ ] Approve to proceed with **Module 4: PLANNING**
 
 ---
 
@@ -102,6 +92,4 @@ supabase/migrations/
 
 - [40_DATABASE_ARCHITECTURE.md](40_DATABASE_ARCHITECTURE.md)
 - [43_MASTER_DATA_LIST.md](43_MASTER_DATA_LIST.md)
-- [44_TRANSACTION_LIST.md](44_TRANSACTION_LIST.md)
-- [18_CALENDAR_ENGINE.md](../20-architecture/18_CALENDAR_ENGINE.md)
 - [05_DATABASE_DICTIONARY.md](05_DATABASE_DICTIONARY.md)
