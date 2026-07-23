@@ -9,8 +9,8 @@
 
 | # | Module | Status | Migrations |
 |---|--------|--------|------------|
-| 1 | **PLATFORM** | Applied to remote `Factory Operations System` (`mpjenispayfpsozcyird`) | `platform_01` … `platform_09` |
-| 2 | **CALENDAR & RESOURCES** | Applied to remote `Factory Operations System` (`mpjenispayfpsozcyird`) | `calendar_01` … `calendar_09` |
+| 1 | **PLATFORM** | Applied to remote `Factory-Operations` (`ilkzavjrjwjebcyitgaj`, `ap-south-1`) | `platform_01` … `platform_09` |
+| 2 | **CALENDAR & RESOURCES** | Applied to remote `Factory-Operations` (`ilkzavjrjwjebcyitgaj`, `ap-south-1`) | `calendar_01` … `calendar_09` |
 | 3 | PRODUCT | Pending | customer, part, material, BOM, process |
 | 4 | PLANNING (txn) | Pending | sales_order, production_plan*, approvals, history |
 | 5 | INTEGRATION / LOG / DASHBOARD | Pending | outbox, sync, file_link, logs, layouts |
