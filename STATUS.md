@@ -49,8 +49,9 @@
 
 ## Next Task
 
-1. **Review** [`knowledge/10_Business/PLANNING_BUSINESS_ANALYSIS.md`](knowledge/10_Business/PLANNING_BUSINESS_ANALYSIS.md) (wait for approval)  
-2. **Dashboard** — KPI widgets / saved layouts (see `templates/new_dashboard.md`)  
+1. **Vercel Auto Deploy** — [`knowledge/50_Integration/VERCEL.md`](knowledge/50_Integration/VERCEL.md) (login smoke test)  
+2. **Review** [`knowledge/10_Business/PLANNING_BUSINESS_ANALYSIS.md`](knowledge/10_Business/PLANNING_BUSINESS_ANALYSIS.md) (wait for approval)  
+3. **Dashboard** — KPI widgets / saved layouts (see `templates/new_dashboard.md`)  
 3. Optional: deepen Calendar Engine domain service (beyond SQL helpers)  
 4. Module 5 — Integration / Log / Outbox (when approved)  
 

@@ -50,6 +50,8 @@ npm install
 npm run dev
 ```
 
+**Vercel Auto Deploy (login test):** [`knowledge/50_Integration/VERCEL.md`](knowledge/50_Integration/VERCEL.md)
+
 | Script | Purpose |
 |--------|---------|
 | `npm run dev` | Local development |

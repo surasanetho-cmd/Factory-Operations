@@ -80,6 +80,7 @@ manufacturing-platform/
 | Document | Description |
 |----------|-------------|
 | [SUPABASE.md](50_Integration/SUPABASE.md) | Postgres + Auth |
+| [VERCEL.md](50_Integration/VERCEL.md) | **Auto Deploy + Login test** |
 | [GOOGLE_DRIVE.md](50_Integration/GOOGLE_DRIVE.md) | Drive attachments |
 | [TELEGRAM.md](50_Integration/TELEGRAM.md) | Telegram alerts |
 | [SAP.md](50_Integration/SAP.md) | Future SAP sync |
