@@ -59,9 +59,12 @@ Save. Without these, sign-in may fail or redirect incorrectly on preview/product
 ## 4. Smoke test after deploy
 
 1. Open `https://<your-project>.vercel.app/login`
-2. Sign in (e.g. `admin@factory.local` — rotate password for shared envs)
-3. Expect redirect to `/dashboard`
-4. Sign out works
+2. **Create your user first** (Supabase does not auto-register Gmail):
+   - Dashboard → **Authentication → Users → Add user**
+   - SQL Editor: `select master.assign_role_by_email('your@email.com', 'admin');`
+3. Sign in at `/login`
+4. Expect redirect to `/dashboard`
+5. Sign out works
 
 ---
 
