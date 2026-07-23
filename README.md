@@ -20,6 +20,7 @@ Auth: [51_AUTH_MODULE_DELIVERY.md](docs/30-database/51_AUTH_MODULE_DELIVERY.md)
 | CALENDAR & RESOURCES | Applied |
 | PRODUCT | Applied |
 | AUTH / MENU (Phase 5) | Applied + app |
+| PLANNING | Applied + UI (header/detail/calendar/capacity/approve/release) |
 
 ## App (Phase 5 Authentication)
 
