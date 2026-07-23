@@ -48,10 +48,10 @@
 
 ## Next Task
 
-1. **Dashboard** — KPI widgets / saved layouts (see `templates/new_dashboard.md`)  
-2. Optional: deepen Calendar Engine domain service (beyond SQL helpers)  
-3. Module 5 — Integration / Log / Outbox (when approved)  
-4. Keep `STATUS.md` in sync each sprint
+1. **Review** [`knowledge/10_Business/PLANNING_BUSINESS_ANALYSIS.md`](knowledge/10_Business/PLANNING_BUSINESS_ANALYSIS.md) (wait for approval)  
+2. **Dashboard** — KPI widgets / saved layouts (see `templates/new_dashboard.md`)  
+3. Optional: deepen Calendar Engine domain service (beyond SQL helpers)  
+4. Module 5 — Integration / Log / Outbox (when approved)  
 
 ---
 
@@ -59,8 +59,8 @@
 
 | Issue | Status | Resolution |
 |-------|--------|------------|
-| Waiting for Business Rule of Planning | ✅ Closed | See [`knowledge/10_Business/BUSINESS_RULES.md`](knowledge/10_Business/BUSINESS_RULES.md) §2 + [`knowledge/60_Module/PLANNING.md`](knowledge/60_Module/PLANNING.md) |
-| Need confirmation for Calendar logic | ✅ Confirmed | ADR accepted: [`knowledge/99_ADR/ADR-003-Calendar.md`](knowledge/99_ADR/ADR-003-Calendar.md) · Engine doc: `docs/20-architecture/18_CALENDAR_ENGINE.md` |
+| Waiting for Business Rule of Planning | 🟡 In review | Full BA draft: [`PLANNING_BUSINESS_ANALYSIS.md`](knowledge/10_Business/PLANNING_BUSINESS_ANALYSIS.md) — confirm §17 open points |
+| Need confirmation for Calendar logic | ✅ Confirmed | [`ADR-003-Calendar.md`](knowledge/99_ADR/ADR-003-Calendar.md); detailed in BA §13–16 |
 
 Open:
 

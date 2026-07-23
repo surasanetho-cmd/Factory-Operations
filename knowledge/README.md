@@ -38,6 +38,7 @@ manufacturing-platform/
 | Document | Description |
 |----------|-------------|
 | [BUSINESS_ANALYSIS.md](10_Business/BUSINESS_ANALYSIS.md) | Problem / stakeholders / scope |
+| [PLANNING_BUSINESS_ANALYSIS.md](10_Business/PLANNING_BUSINESS_ANALYSIS.md) | **Production Planning BA (review draft)** |
 | [BUSINESS_FLOW.md](10_Business/BUSINESS_FLOW.md) | Order → planning → ship flow |
 | [BUSINESS_RULES.md](10_Business/BUSINESS_RULES.md) | Enforceable business rules |
 | [TERMINOLOGY.md](10_Business/TERMINOLOGY.md) | Glossary |

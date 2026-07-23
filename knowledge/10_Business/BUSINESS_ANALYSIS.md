@@ -44,3 +44,6 @@ Factories need one operational system for **order → plan → produce → store
 ## 6. Domain modules
 
 See [60_Module](../60_Module/) — Planning delivered first; Production / Store / OEE / QC / Maintenance reserved.
+
+**Production Planning deep-dive (business only, for review):**  
+[PLANNING_BUSINESS_ANALYSIS.md](PLANNING_BUSINESS_ANALYSIS.md)
