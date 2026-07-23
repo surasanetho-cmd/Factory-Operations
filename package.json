@@ -10,7 +10,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "supabase:check": "node scripts/check-supabase.mjs"
+    "supabase:check": "node scripts/check-supabase.mjs",
+    "auth:provision": "node scripts/provision-auth-user.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

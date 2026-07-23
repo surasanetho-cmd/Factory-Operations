@@ -50,12 +50,28 @@ Sidebar menus are DB-driven (`authz.my_menus`).
 
 ## Demo admin (local / non-prod)
 
-Create via Auth Admin API (already seeded once on this project):
+Only **`admin@factory.local`** is documented as a pre-created demo user (via Auth Admin API).  
+**Other emails (e.g. your Gmail) are not registered until you create them.**
 
-- Email: `admin@factory.local`
-- Role: `admin` via `master.user_role`
+### Option A — Supabase Dashboard
 
-Rotate password before any shared/prod use.
+1. **Authentication → Users → Add user**
+2. Email + password, enable **Auto confirm user**
+3. SQL Editor:
+
+```sql
+select master.assign_role_by_email('your@email.com', 'admin');
+```
+
+### Option B — CLI script (uses service role from `.env.local`)
+
+```bash
+node scripts/provision-auth-user.mjs surasane.tho@gmail.com "YourPassword123!" admin
+```
+
+Then sign in at `/login`.
+
+Rotate passwords before shared/production use.
 
 ---
 

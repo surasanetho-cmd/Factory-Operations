@@ -30,7 +30,7 @@ export default async function LoginPage() {
             Sign in with Supabase Auth
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="grid gap-4">
           {!config.configured ? (
             <p className="text-sm text-[var(--danger)] m-0">
               Supabase env is missing on this deployment. Set{" "}
@@ -39,7 +39,29 @@ export default async function LoginPage() {
               <strong>Redeploy</strong>.
             </p>
           ) : (
-            <LoginForm />
+            <>
+              <LoginForm />
+              <details className="text-xs text-[var(--text-muted)]">
+                <summary className="cursor-pointer">ยัง login ไม่ได้ / ไม่รู้จัก account?</summary>
+                <ul className="mt-2 space-y-1 pl-4 list-disc">
+                  <li>
+                    ระบบยังไม่มี user อัตโนมัติ — ต้องสร้างใน Supabase →{" "}
+                    <strong>Authentication → Users → Add user</strong>
+                  </li>
+                  <li>
+                    Demo (ถ้ามี): <code>admin@factory.local</code>
+                  </li>
+                  <li>
+                    หลังสร้าง user แล้ว ให้ assign role admin ใน SQL Editor:{" "}
+                    <code>select master.assign_role_by_email(&apos;your@email.com&apos;, &apos;admin&apos;);</code>
+                  </li>
+                  <li>
+                    หรือรัน local:{" "}
+                    <code>node scripts/provision-auth-user.mjs your@email.com &quot;password&quot; admin</code>
+                  </li>
+                </ul>
+              </details>
+            </>
           )}
         </CardContent>
       </Card>

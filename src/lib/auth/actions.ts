@@ -7,6 +7,20 @@ export type SignInState = {
   error?: string;
 };
 
+function mapAuthError(message: string, email: string) {
+  const lower = message.toLowerCase();
+
+  if (lower.includes("invalid login credentials") || lower.includes("invalid credentials")) {
+    return `ไม่พบบัญชี ${email} หรือรหัสผ่านไม่ถูกต้อง — ต้องสร้าง user ใน Supabase Auth ก่อน (ดูคำแนะนำด้านล่าง)`;
+  }
+
+  if (lower.includes("email not confirmed")) {
+    return "อีเมลยังไม่ได้ยืนยัน — เปิด Supabase Auth แล้วตั้ง email_confirm หรือปิด email confirmation";
+  }
+
+  return message;
+}
+
 export async function signInWithPassword(
   _prevState: SignInState,
   formData: FormData,
@@ -23,7 +37,7 @@ export async function signInWithPassword(
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      return { error: error.message };
+      return { error: mapAuthError(error.message, email) };
     }
   } catch (cause) {
     const message =
