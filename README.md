@@ -1,41 +1,43 @@
 # Factory Operations
 
-Manufacturing platform (Production Planning first) — docs + Supabase SQL + Auth shell.
+Manufacturing platform (Production Planning first).
 
-## Docs
+## Layout
 
-[`/docs`](docs/README.md) — standards and database design.
+```text
+.
+├── .cursor/
+├── .docs/           # pointers for agents
+├── knowledge/       # SOURCE OF TRUTH (docs)
+├── docs/            # legacy archive
+├── src/             # Next.js app
+└── supabase/        # migrations
+```
 
-## Database
+## Knowledge
 
-Supabase project **Factory-Operations** (`ilkzavjrjwjebcyitgaj`)
+**Start:** [`knowledge/README.md`](knowledge/README.md)
 
-Migrations: [`supabase/migrations/`](supabase/migrations/)  
-Tracker: [50_SQL_MODULE_DELIVERY.md](docs/30-database/50_SQL_MODULE_DELIVERY.md)  
-Auth: [51_AUTH_MODULE_DELIVERY.md](docs/30-database/51_AUTH_MODULE_DELIVERY.md)
+| Area | Path |
+|------|------|
+| Governance | `knowledge/00_Governance/` |
+| Business | `knowledge/10_Business/` |
+| Database | `knowledge/20_Database/` |
+| UI/UX | `knowledge/30_UI_UX/` |
+| Backend | `knowledge/40_Backend/` |
+| Integration | `knowledge/50_Integration/` |
+| Modules | `knowledge/60_Module/` |
+| ADR | `knowledge/99_ADR/` |
 
-| Module | Status |
-|--------|--------|
-| PLATFORM | Applied |
-| CALENDAR & RESOURCES | Applied |
-| PRODUCT | Applied |
-| AUTH / MENU (Phase 5) | Applied + app |
-| PLANNING | Applied + UI (header/detail/calendar/capacity/approve/release) |
-
-## App (Phase 5 Authentication)
+## App
 
 ```bash
-cp .env.example .env.local   # fill Supabase URL + anon key
+cp .env.example .env.local
 npm install
 npm run dev
 ```
 
-| Feature | Route |
-|---------|-------|
-| Login | `/login` |
-| Roles | `/settings/roles` |
-| Permissions | `/settings/permissions` |
-| Menus | `/settings/menus` |
-| Users | `/settings/users` |
+## Database
 
-Sidebar is driven by `master.menu` + RBAC.
+Supabase project **Factory-Operations** · migrations in `supabase/migrations/`  
+Plan: [`knowledge/20_Database/MIGRATION_PLAN.md`](knowledge/20_Database/MIGRATION_PLAN.md)
