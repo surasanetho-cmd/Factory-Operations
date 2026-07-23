@@ -13,6 +13,22 @@ Format inspired by Keep a Changelog; SemVer when software releases begin.
 
 ---
 
+## [0.4.0] — 2026-07-23
+
+### Added
+
+- Supabase project init (`supabase/config.toml`)
+- **Module 1 PLATFORM** SQL migrations (`platform_01`–`platform_09`):
+  schemas, audit helpers, org/RBAC, lookups, config, authz+RLS, views, seed, grants
+- [50_SQL_MODULE_DELIVERY.md](../30-database/50_SQL_MODULE_DELIVERY.md)
+
+### Notes
+
+- Next module (Calendar & Resources) waits for Module 1 review
+- Local apply requires Docker: `npx supabase db reset`
+
+---
+
 ## [0.3.0] — 2026-07-22
 
 ### Added

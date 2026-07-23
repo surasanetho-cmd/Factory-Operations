@@ -1,9 +1,9 @@
 # 40 — Database Architecture (Complete Design)
 
 **Product:** Smart-Factory Manufacturing Platform  
-**Status:** Design complete — **awaiting review before SQL / migrations**  
+**Status:** Module 1 (PLATFORM) SQL delivered — review before Module 2  
 **Engine:** PostgreSQL (Supabase)  
-**No SQL in this phase.**
+**SQL location:** [`supabase/migrations/`](../../supabase/migrations/) · delivery notes: [50_SQL_MODULE_DELIVERY.md](50_SQL_MODULE_DELIVERY.md)
 
 ---
 
@@ -17,7 +17,7 @@ This pack is the implementable database architecture derived from all `/docs` st
 4. Per-table: Purpose, Relationships, PK, FKs, Indexes, Scalability, Soft Delete, Audit  
 5. Data Dictionary — [05_DATABASE_DICTIONARY.md](05_DATABASE_DICTIONARY.md)
 
-**Do not generate SQL until this pack is reviewed and approved.**
+**Do not generate the next module’s SQL until Module 1 is reviewed.**
 
 ---
 

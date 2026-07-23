@@ -55,7 +55,8 @@ docs/
 
 | Document | Description |
 |----------|-------------|
-| [40_DATABASE_ARCHITECTURE.md](30-database/40_DATABASE_ARCHITECTURE.md) | **Complete DB architecture (review gate)** |
+| [40_DATABASE_ARCHITECTURE.md](30-database/40_DATABASE_ARCHITECTURE.md) | Complete DB architecture |
+| [50_SQL_MODULE_DELIVERY.md](30-database/50_SQL_MODULE_DELIVERY.md) | **SQL modules (PLATFORM delivered)** |
 | [41_MODULE_RELATIONSHIPS.md](30-database/41_MODULE_RELATIONSHIPS.md) | Module relationships |
 | [42_ENTITY_RELATIONSHIPS.md](30-database/42_ENTITY_RELATIONSHIPS.md) | Entity relationships |
 | [43_MASTER_DATA_LIST.md](30-database/43_MASTER_DATA_LIST.md) | Master data list |

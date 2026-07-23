@@ -36,8 +36,10 @@ Full catalog: [docs/README.md](docs/README.md)
 
 ## Current Phase
 
-**Production Planning** — complete database architecture documented. **Awaiting review before SQL.**
+**Production Planning** — database architecture documented; **Module 1 (PLATFORM) SQL** delivered.
+
+SQL: [`supabase/migrations/`](supabase/migrations/) · [Module delivery](docs/30-database/50_SQL_MODULE_DELIVERY.md)
 
 ## Next Step
 
-Wait for the next instruction before generating application source code.
+Review Module 1 SQL, then approve **Module 2: Calendar & Resources**.
