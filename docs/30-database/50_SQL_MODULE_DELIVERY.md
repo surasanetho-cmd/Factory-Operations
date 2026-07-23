@@ -9,7 +9,7 @@
 
 | # | Module | Status | Migrations |
 |---|--------|--------|------------|
-| 1 | **PLATFORM** | Delivered | `platform_01` … `platform_09` |
+| 1 | **PLATFORM** | Applied to remote `Factory Operations System` (`mpjenispayfpsozcyird`) | `platform_01` … `platform_09` |
 | 2 | CALENDAR & RESOURCES | Pending | calendar, holiday, line, machine, shift, capacity, OT/shutdown |
 | 3 | PRODUCT | Pending | customer, part, material, BOM, process |
 | 4 | PLANNING (txn) | Pending | sales_order, production_plan*, approvals, history |
